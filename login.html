@@ -142,8 +142,8 @@
         <ul class="nav-links">
             <li><a href="index.html">Home</a></li>
             <li><a href="signup.html">Sign Up</a></li>
-            <li><a href="sub-admin-login.html">Sub-Admin Login</a></li>
-            <li><a href="admin-login.html">Admin Login</a></li>
+            <li><a href="sub-admin.html">Sub-Admin Login</a></li>
+            <li><a href="admin.html">Admin Login</a></li>
         </ul>
         <div class="find-us">
             <h4>FIND WITH US</h4>
@@ -299,7 +299,7 @@
                             return;
                         }
                         
-                        // ইউজারের ডাটা পাওয়া
+                        // ইউজারের ডাটা পাওয়া
                         let userData = null;
                         let userId = null;
                         
@@ -309,7 +309,7 @@
                             whatsappSnapshot.forEach(child => { userData = child.val(); userId = child.key; });
                         }
                         
-                        // পাসওয়ার্ড ম্যাচ চেক করা
+                        // পাসওয়ার্ড ম্যাচ চেক করা
                         if (userData && userData.password === password) {
                             // লগইন সফল হলে ডাটা স্টোরেজে সেভ করা হবে (যা ড্যাশবোর্ডে কাজে লাগবে)
                             localStorage.setItem('isLoggedIn', 'true');
@@ -326,9 +326,9 @@
                             
                             showSuccess('login-success', 'Login successful! Redirecting...');
                             
-                            // ড্যাশবোর্ডে নিয়ে যাওয়া
+                            // ড্যাশবোর্ডে নিয়ে যাওয়া
                             setTimeout(() => {
-                                window.location.href = 'dashboard/index.html';
+                                window.location.href = 'dashboard.html';
                             }, 1500);
                         } else {
                             showError('login-error', 'Incorrect password. Please try again.');
