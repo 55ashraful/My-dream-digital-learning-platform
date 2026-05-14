@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - My Dream Digital</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --border: #e2e8f0;
+            --accent: #00b894;
+            --accent-glow: rgba(0, 184, 148, 0.15);
+            --text: #1e293b;
+            --text-muted: #64748b;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Hind Siliguri', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+        .font-display { font-family: 'Poppins', sans-serif; }
+
+        .bg-pattern {
+            position: fixed; inset: 0;
+            background: radial-gradient(ellipse at 20% 20%, rgba(0, 184, 148, 0.06) 0%, transparent 50%);
+            pointer-events: none; z-index: 0;
+        }
+
+        .card {
+            background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+            transition: all 0.3s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        .card:hover { border-color: var(--accent); box-shadow: 0 4px 20px var(--accent-glow); }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), #00a884); color: #fff;
+            font-weight: 600; padding: 12px 24px; border-radius: 10px; border: none;
+            cursor: pointer; width: 100%; font-size: 16px; transition: all 0.3s;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px var(--accent-glow); }
+
+        .input-field {
+            background: #f8fafc; border: 1px solid var(--border); border-radius: 10px;
+            padding: 12px 16px; color: var(--text); width: 100%; font-size: 16px;
+        }
+        .input-field:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+
+        .sidebar {
+            position: fixed; left: -300px; top: 0; width: 280px; height: 100vh;
+            background: var(--card); border-right: 1px solid var(--border); z-index: 1000;
+            transition: left 0.4s ease; overflow-y: auto;
+        }
+        .sidebar.open { left: 0; }
+        .sidebar-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 999;
+            opacity: 0; visibility: hidden; transition: all 0.3s;
+        }
+        .sidebar-overlay.show { opacity: 1; visibility: visible; }
+
+        .menu-item {
+            display: flex; align-items: center; gap: 12px; padding: 14px 20px;
+            color: var(--text-muted); cursor: pointer; border-left: 3px solid transparent;
+        }
+        .menu-item:hover, .menu-item.active { background: rgba(0,184,148,0.08); color: var(--accent); border-left-color: var(--accent); }
+
+        .balance-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdf9 100%); border: 1px solid var(--accent);
+            border-radius: 20px; padding: 24px; box-shadow: 0 4px 15px var(--accent-glow);
+        }
+
+        .loader-wrapper {
+            position: fixed; inset: 0; background: white; display: flex; 
+            align-items: center; justify-content: center; z-index: 9999; flex-direction: column; gap: 10px;
+        }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--accent); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fadeInUp { animation: fadeInUp 0.6s ease forwards; }
+    </style>
+</head>
+<body>
+    <div class="bg-pattern"></div>
+
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loader-wrapper">
+        <div class="loader"></div>
+        <p class="text-gray-500 mt-2">লোড হচ্ছে...</p>
+    </div>
+
+    <!-- Dashboard Section -->
+    <div id="dashboardSection" class="hidden relative z-10 min-h-screen">
+        <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+        <aside class="sidebar" id="sidebar">
+            <div class="p-5 border-b border-gray-200">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 overflow-hidden flex items-center justify-center flex-shrink-0">
+                        <img id="sidebarPhoto" src="" alt="" class="w-full h-full object-cover hidden">
+                        <span id="sidebarInitial" class="text-xl font-bold text-white"></span>
+                    </div>
+                    <div>
+                        <h3 id="sidebarName" class="font-semibold text-lg text-gray-800"></h3>
+                        <p class="text-sm text-gray-500">Member</p>
+                    </div>
+                </div>
+            </div>
+            <nav class="py-4">
+                <div class="menu-item active" onclick="showSection('home')"><i class="w-5 h-5 fa-solid fa-house"></i><span>হোম</span></div>
+                <div class="menu-item" onclick="showSection('profile')"><i class="w-5 h-5 fa-solid fa-user"></i><span>প্রোফাইল</span></div>
+                <div class="menu-item" onclick="showSection('balance')"><i class="w-5 h-5 fa-solid fa-wallet"></i><span>ব্যালেন্স ও রেফার</span></div>
+                <div class="menu-item text-red-500" onclick="logout()"><i class="w-5 h-5 fa-solid fa-right-from-bracket"></i><span>লগআউট</span></div>
+            </nav>
+        </aside>
+
+        <main class="p-4 sm:p-6 max-w-4xl mx-auto">
+            <header class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-3 cursor-pointer" onclick="toggleSidebar()">
+                    <i class="fa-solid fa-bars text-xl text-gray-600"></i>
+                    <h1 class="font-display text-xl font-bold text-gray-800">My Dream Digital</h1>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 overflow-hidden flex items-center justify-center cursor-pointer" onclick="showSection('profile')">
+                    <img id="headerPhoto" src="" alt="" class="w-full h-full object-cover hidden">
+                    <span id="headerInitial" class="text-sm font-bold text-white"></span>
+                </div>
+            </header>
+
+            <!-- Home -->
+            <section id="homeSection" class="section">
+                <div class="animate-fadeInUp">
+                    <h2 class="text-3xl font-bold mb-2 text-gray-800">স্বাগতম, <span id="welcomeName"></span></h2>
+                    <p class="text-gray-500 mb-6">আজকের দিনটি লক্ষ্য অর্জনের জন্য চমৎকার</p>
+                </div>
+                <div class="balance-card mb-6 animate-fadeInUp">
+                    <p class="text-gray-500 mb-1">বর্তমান ব্যালেন্স</p>
+                    <h3 class="text-4xl font-bold text-gray-800 mb-4 font-display"><span id="homeBalance">0</span> টাকা</h3>
+                    <button class="btn-primary w-auto" onclick="showSection('balance')">রেফার করে আয় শুরু করুন</button>
+                </div>
+            </section>
+
+            <!-- Profile -->
+            <section id="profileSection" class="section hidden">
+                <h2 class="text-2xl font-bold mb-6 animate-fadeInUp text-gray-800">আমার প্রোফাইল</h2>
+                <div class="card p-6 animate-fadeInUp">
+                    <div class="flex flex-col items-center mb-6">
+                        <div class="relative">
+                            <img id="profilePhoto" src="https://via.placeholder.com/120/ffffff/00b894?text=User" alt="Profile" class="w-32 h-32 rounded-full border-4 border-emerald-500 object-cover bg-gray-100">
+                            <label for="photoInput" class="absolute bottom-1 right-1 bg-emerald-500 w-10 h-10 rounded-full flex items-center justify-center cursor-pointer shadow-lg hover:scale-110 transition">
+                                <i class="fa-solid fa-camera text-white"></i>
+                            </label>
+                            <input type="file" id="photoInput" accept="image/*" class="hidden" onchange="uploadProfilePhoto(this)">
+                        </div>
+                        <p id="uploadStatus" class="text-sm text-gray-500 mt-2"></p>
+                    </div>
+                    <div class="space-y-4 max-w-md mx-auto">
+                        <div><label class="block text-sm text-gray-500 mb-1">নাম</label><input type="text" id="profileName" class="input-field bg-gray-100" readonly></div>
+                        <div><label class="block text-sm text-gray-500 mb-1">ইমেইল</label><input type="email" id="profileEmail" class="input-field bg-gray-100" readonly></div>
+                        <div><label class="block text-sm text-gray-500 mb-1">মোবাইল নম্বর</label><input type="tel" id="profilePhone" class="input-field bg-gray-100" readonly></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Balance & Refer -->
+            <section id="balanceSection" class="section hidden">
+                <h2 class="text-2xl font-bold mb-6 animate-fadeInUp text-gray-800">ব্যালেন্স ও রেফার</h2>
+                <div class="balance-card mb-6 animate-fadeInUp text-center">
+                    <p class="text-gray-500 mb-1">মোট ব্যালেন্স</p>
+                    <h3 class="text-5xl font-bold text-gray-800 mb-2 font-display"><span id="totalBalance">0</span> টাকা</h3>
+                    <p class="text-emerald-600 font-medium">মোট রেফার: <span id="totalRefers">0</span> জন</p>
+                </div>
+                <div class="card p-5 animate-fadeInUp">
+                    <h3 class="text-lg font-semibold mb-4 text-gray-800">রেফার করে আয় করুন</h3>
+                    <p class="text-gray-500 mb-4">প্রত্যেক সফল রেফারের জন্য আপনি পাবেন <strong class="text-emerald-600">১০০ টাকা</strong></p>
+                    
+                    <div class="bg-gray-50 rounded-lg p-4 mb-4 border border-gray-100">
+                        <p class="text-sm text-gray-500 mb-1">আপনার রেফার কোড (৬ সংখ্যা)</p>
+                        <div class="flex items-center gap-2">
+                            <span id="referCode" class="text-2xl font-mono font-bold text-emerald-600 tracking-widest"></span>
+                            <button class="text-gray-400 hover:text-emerald-600" onclick="copyReferCode()"><i class="fa-regular fa-copy text-xl"></i></button>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-50 rounded-lg p-4 mb-4 border border-gray-100">
+                        <p class="text-sm text-gray-500 mb-2">আপনার রেফার লিংক</p>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span id="referLink" class="text-sm text-emerald-600 break-all flex-1"></span>
+                            <div class="flex gap-3">
+                                <button class="text-gray-400 hover:text-emerald-600" onclick="copyReferLink()"><i class="fa-regular fa-copy text-xl"></i></button>
+                                <button class="text-gray-400 hover:text-emerald-600" onclick="shareReferLink()"><i class="fa-solid fa-share-nodes text-xl"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-4 right-4 bg-emerald-600 text-white px-6 py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-[9999]">
+        <span id="toastMessage"></span>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // ==========================================
+        // 🔴 আপনার ফায়ারবেস কনফিগারেশন এখানে বসান 🔴
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyAbXbNRqKPGJO8ShoFxgYBtMvBIiwqxUNA",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com", // আপনার প্রজেক্ট ID দিন
+            projectId: "YOUR_PROJECT_ID",                 // আপনার প্রজেক্ট ID দিন
+            storageBucket: "YOUR_PROJECT_ID.appspot.com", 
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+        // ==========================================
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const IMGBB_API_KEY = '07bb6a485d95048a7add76d3207d44be'; 
+
+        const BASE_URL = "https://my-dream-digital-learning-platform.vercel.app/index.html";
+        const LOGIN_URL = "login.html"; // আপনার লগইন পেজের নাম দিন
+
+        let currentUserData = null;
+        let currentUid = null;
+
+        // UI Helpers
+        window.showSection = (section) => {
+            document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
+            document.getElementById(section + 'Section').classList.remove('hidden');
+            document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
+            if(event.currentTarget) event.currentTarget.classList.add('active');
+            if(window.innerWidth < 768) toggleSidebar();
+        }
+
+        window.toggleSidebar = () => {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('sidebarOverlay').classList.toggle('show');
+        }
+
+        window.showToast = (message, type = 'success') => {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            toastMessage.textContent = message;
+            toast.style.background = type === 'success' ? '#10b981' : '#ef4444';
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            setTimeout(() => { 
+                toast.classList.remove('translate-y-0', 'opacity-100'); 
+                toast.classList.add('translate-y-20', 'opacity-0'); 
+            }, 3000);
+        }
+
+        // Logout
+        window.logout = async () => {
+            await signOut(auth);
+            window.location.href = LOGIN_URL; 
+        }
+
+        // Auth State Observer (লগইন ছাড়া ঢুকলে লগইন পেজে পাঠিয়ে দেবে)
+        onAuthStateChanged(auth, (user) => {
+            const loadingScreen = document.getElementById('loadingScreen');
+            if (user) {
+                currentUid = user.uid;
+                document.getElementById('dashboardSection').classList.remove('hidden');
+                loadingScreen.style.display = 'none'; // লোডিং লুকানো
+                listenToUserData(user.uid);
+            } else {
+                // ইউজার লগইন করা না থাকলে লগইন পেজে রিডাইরেক্ট করা
+                window.location.href = LOGIN_URL;
+            }
+        });
+
+        // Real-time Firestore Listener (ব্যালেন্স রিয়েল টাইমে আপডেট হবে)
+        function listenToUserData(uid) {
+            onSnapshot(doc(db, "users", uid), (docSnap) => {
+                if (docSnap.exists()) {
+                    currentUserData = docSnap.data();
+                    updateDashboardUI(currentUserData);
+                }
+            });
+        }
+
+        function updateDashboardUI(data) {
+            const initial = data.name ? data.name.charAt(0).toUpperCase() : "U";
+            
+            document.getElementById('welcomeName').textContent = data.name;
+            document.getElementById('sidebarName').textContent = data.name;
+            document.getElementById('sidebarInitial').textContent = initial;
+            document.getElementById('headerInitial').textContent = initial;
+            
+            document.getElementById('homeBalance').textContent = data.balance;
+            document.getElementById('totalBalance').textContent = data.balance;
+            document.getElementById('totalRefers').textContent = data.totalRefers;
+            
+            document.getElementById('profileName').value = data.name;
+            document.getElementById('profileEmail').value = data.email;
+            document.getElementById('profilePhone').value = data.phone;
+
+            document.getElementById('referCode').textContent = data.referCode;
+            const rLink = `${BASE_URL}?ref=${data.referCode}`;
+            document.getElementById('referLink').textContent = rLink;
+
+            // ছবি আপডেট লজিক
+            if(data.photo) {
+                document.getElementById('profilePhoto').src = data.photo;
+                document.getElementById('sidebarPhoto').src = data.photo;
+                document.getElementById('headerPhoto').src = data.photo;
+                
+                document.getElementById('sidebarPhoto').classList.remove('hidden');
+                document.getElementById('sidebarInitial').classList.add('hidden');
+                document.getElementById('headerPhoto').classList.remove('hidden');
+                document.getElementById('headerInitial').classList.add('hidden');
+            } else {
+                document.getElementById('profilePhoto').src = "https://via.placeholder.com/120/ffffff/00b894?text=User";
+                document.getElementById('sidebarPhoto').classList.add('hidden');
+                document.getElementById('sidebarInitial').classList.remove('hidden');
+                document.getElementById('headerPhoto').classList.add('hidden');
+                document.getElementById('headerInitial').classList.remove('hidden');
+            }
+        }
+
+        // Photo Upload to ImgBB (Firebase Storage ব্যবহার করা হয়নি)
+        window.uploadProfilePhoto = async (input) => {
+            if (!input.files || !input.files[0]) return;
+            
+            const file = input.files[0];
+            const statusEl = document.getElementById('uploadStatus');
+            statusEl.textContent = "ছবি আপলোড হচ্ছে...";
+            
+            const formData = new FormData();
+            formData.append('image', file);
+            formData.append('key', IMGBB_API_KEY);
+            
+            try {
+                const response = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData });
+                const data = await response.json();
+                
+                if (data.success) {
+                    await updateDoc(doc(db, "users", currentUid), { photo: data.data.url });
+                    statusEl.textContent = "ছবি সফলভাবে আপলোড হয়েছে!";
+                    showToast("প্রোফাইল ছবি আপডেট হয়েছে!");
+                } else {
+                    statusEl.textContent = "আপলোড ব্যর্থ হয়েছে।";
+                    showToast("আপলোড ব্যর্থ হয়েছে", "error");
+                }
+            } catch (error) {
+                statusEl.textContent = "নেটওয়ার্ক সমস্যা হয়েছে।";
+                showToast("আপলোড ব্যর্থ হয়েছে", "error");
+            }
+        }
+
+        // Refer Link Copy & Share Functions
+        window.copyReferCode = () => {
+            if(!currentUserData) return;
+            navigator.clipboard.writeText(currentUserData.referCode);
+            showToast("রেফার কোড কপি হয়েছে!");
+        }
+
+        window.copyReferLink = () => {
+            if(!currentUserData) return;
+            const rLink = `${BASE_URL}?ref=${currentUserData.referCode}`;
+            navigator.clipboard.writeText(rLink);
+            showToast("রেফার লিংক কপি হয়েছে!");
+        }
+
+        window.shareReferLink = () => {
+            if(!currentUserData) return;
+            const rLink = `${BASE_URL}?ref=${currentUserData.referCode}`;
+            const shareData = { 
+                title: 'My Dream Digital', 
+                text: `My Dream Digital এ জয়েন করুন এবং আয় শুরু করুন! আমার রেফার কোড: ${currentUserData.referCode}`, 
+                url: rLink 
+            };
+            
+            if (navigator.share) {
+                navigator.share(shareData);
+            } else {
+                copyReferLink();
+            }
+        }
+
+    </script>
+</body>
+</html>
