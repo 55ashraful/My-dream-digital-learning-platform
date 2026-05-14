@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.9">
+    <title>Sub-Admin Dashboard - My Dream Digital</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- Firebase Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+    <style>
+        /* সাদা থিমের ভ্যারিয়েবলস */
+        :root {
+            --primary: #6a11cb;
+            --secondary: #2575fc;
+            --primary-light: #f0ebff;
+            --text-dark: #2c3e50;
+            --text-muted: #7f8d8d;
+            --bg-light: #f4f6f9;
+            --card-bg: #ffffff;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.03);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Hind Siliguri', sans-serif; background: var(--bg-light); color: var(--text-dark); min-height: 100vh; display: flex; }
+        .font-display { font-display: 'Poppins', sans-serif; }
+
+        /* সাইডবার স্টাইল */
+        .sidebar {
+            width: 280px; background: var(--card-bg); border-right: 1px solid var(--border-color);
+            padding: 20px 0; display: flex; flex-direction: column; position: fixed; height: 100vh;
+            left: 0; top: 0; z-index: 50; transition: transform 0.3s ease;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+        }
+        .sidebar.closed { transform: translateX(-100%); }
+        .sidebar-header {
+            padding: 0 20px 20px; border-bottom: 1px solid var(--border-color);
+            display: flex; align-items: center; gap: 12px;
+        }
+        .sidebar-avatar {
+            width: 45px; height: 45px; border-radius: 50%; 
+            background: linear-gradient(135deg, #007bff, #00bfff);
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: 700; font-size: 1.2rem; overflow: hidden;
+        }
+        .sidebar-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .nav-menu { padding: 15px 10px; flex: 1; }
+        .nav-item {
+            display: flex; align-items: center; gap: 12px; padding: 12px 15px;
+            color: var(--text-muted); border-radius: 8px; cursor: pointer; transition: 0.2s; margin-bottom: 5px; font-weight: 500; font-size: 0.95rem;
+        }
+        .nav-item:hover, .nav-item.active { background: #e8f4fd; color: var(--secondary); }
+        .nav-item i { width: 20px; text-align: center; }
+        .nav-item.danger { color: #e74c3c; }
+        .nav-item.danger:hover { background: #fce4e4; }
+
+        /* মেইন কনটেন্ট এরিয়া */
+        .main-content {
+            flex: 1; margin-left: 280px; padding: 20px; transition: margin-left 0.3s ease;
+        }
+        .main-content.expanded { margin-left: 0; }
+        .top-bar {
+            background: var(--card-bg); padding: 15px 20px; border-radius: 12px;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 25px; box-shadow: var(--shadow-sm);
+        }
+        .toggle-btn {
+            display: none; background: white; border: 1px solid var(--border-color);
+            padding: 8px 12px; border-radius: 8px; cursor: pointer; color: var(--text-dark);
+        }
+        
+        /* কার্ডস এবং টেবিল স্টাইল */
+        .card {
+            background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px;
+            padding: 25px; margin-bottom: 20px; box-shadow: var(--shadow-sm);
+        }
+        .stat-card {
+            background: var(--card-bg); border: 1px solid var(--border-color);
+            border-radius: 12px; padding: 20px; text-align: center;
+            box-shadow: var(--shadow-sm); transition: transform 0.2s;
+        }
+        .stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+        .data-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .data-table th, .data-table td {
+            padding: 12px 15px; text-align: left; border-bottom: �ন্যডবর: 1px solid var(--border-color); font-size: 0.9rem;
+        }
+        .data-table th { background-color: var(--bg-light); font-weight: 600; color: var(--text-dark); }
+        .data-table tr:hover td { background-color: #fdfdff; }
+        .badge {
+            padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; display: inline-block;
+        }
+        .badge-success { background: #e8f5e9; color: #27ae60; }
+        .badge-pending { background: #fff3e0; color: #f39c12; }
+        .badge-danger { background: #fdecea; color: #e74c3c; }
+        
+        .input-field {
+            width: 100%; padding: 12px 16px; border: 1px solid var(--border-color);
+            border-radius: 8px; font-size: 1rem; color: var(--text-dark); background: white;
+            transition: 0.2s;
+        }
+        .input-field:focus { outline: none; border-color: var(--secondary); box-shadow: 0 0 0 3px rgba(37, 117, 252, 0.15); }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white;
+            font-weight: 600; padding: 12px 24px; border-radius: 8px; border: none;
+            cursor: pointer; transition: 0.2s; width: 100%; font-size: 1rem;
+        }
+        .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-sm {
+            padding: 6px 12px; border: none; border-radius: 6px; font-size: 0.85rem;
+            cursor: pointer; font-weight: 600; transition: 0.2s; color: white;
+        }
+        .btn-success { background: #27ae60; }
+        .btn-danger { background: #e74c3c; }
+        .btn-sm:hover { opacity: 0.8; transform: translateY(-1px); }
+        .hidden { display: none !important; }
+        .section { display: none; animation: fadeIn 0.3s ease-out; }
+        .section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* ওয়ার্ক সাবমিট কার্ড */
+        .work-card {
+            background: white; border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; margin-bottom: 15px;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: var(--shadow-sm); transition: all 0.2s;
+        }
+        .work-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+        .work-card .text-container { flex: 1; margin-right: 15px; }
+        .work-card .status-badge { margin-top: 5px; }
+        .work-image {
+            width: 60px; height: 60px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border-color);
+        }
+
+        /* মোবাইল রেসপন্সিভ */
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); position: fixed; }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+            .toggle-btn { display: block; }
+            .data-table th, .data-table td { padding: 8px 10px; font-size: 0.8rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- সাইডবার -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-avatar">
+                <span id="subAdminInitial">S</span>
+                <img id="subAdminPhoto" src="" alt="Profile" class="hidden">
+            </div>
+            <div>
+                <h4 class="font-display" style="font-size: 1.1rem; color: #007bff;" id="subAdminName">Sub-Admin</h4>
+                <p style="font-size: 0.8rem; color: var(--text-muted);" id="subAdminRoleText">Role: Loading...</p>
+            </div>
+        </div>
+        <nav class="nav-menu">
+            <div class="nav-item active" onclick="showSection('home', this)">🏠 Home</div>
+            <div class="nav-item" onclick="showSection('tasks', this)">📋 My Tasks</div>
+            <div class="nav-item" onclick="showSection('submitWork', this)">📤 Submit Work</div>
+            <div class="nav-item" onclick="showSection('refers', this)">🤝 My Refers</div>
+            <div class="nav-item danger" onclick="logout()">🚪 Logout</div>
+        </nav>
+    </aside>
+
+    <!-- মেইন কনটেন্ট -->
+    <main class="main-content" id="mainContent">
+        <div class="top-bar">
+            <div class="flex items-center gap-3">
+                <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
+                <h3 class="font-display" style="font-weight:600;">Welcome, <span style="color: #007bff;" id="welcomeName">Sub-Admin</span></h3>
+            </div>
+            <span style="font-size: 0.9rem; color: var(--text-muted);" id="headerEmail">user@email.com</span>
+        </div>
+
+        <div class="container">
+            <!-- হোম সেকশন -->
+            <div id="homeSection" class="section active">
+                <h2 class="font-display" style="font-size: 1.8rem; margin-bottom: 20px; color: var(--text-dark);">Dashboard Overview</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                    <div class="stat-card">
+                        <h4 class="font-display" style="font-size: 2rem; color: var(--primary);">0</h4>
+                        <p style="font-size: 0.9rem; color: var(--text-muted);">Total Tasks</p>
+                    </div>
+                    <div class="stat-card">
+                        <h4 class="font-display" style="font-size: 2rem; color: #007bff;">0</h4>
+                        <p style="font-display" style="font-size: 0.9rem; color: var(--text-muted);">Total Refers</p>
+                    </div>
+                    <div class="stat-card">
+                        <h4 class="font-display" style="font-size: 2rem; color: #27ae60;">0 TK</h4>
+                        <p style="font-display" style="font-size: 0.9rem; color: var(--text-muted);">Total Earnings</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- টাস্ক সেকশন -->
+            <div id="tasksSection" class="section hidden">
+                <div class="card">
+                    <h3 class="font-display" style="margin-bottom: 20px; color: var(--primary);">My Tasks</h3>
+                    <div id="tasksList">
+                        <p style="text-align: center; color: var(--text-muted); padding: 20px;">Loading your tasks...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ওয়ার্ক সাবমিট সেকশন -->
+            <div id="submitWorkSection" class="section hidden">
+                <div class="card">
+                    <h3 class="font-display" style="margin-bottom: 20px; color: var(--primary);">Submit Daily Work</h3>
+                    <p style="margin-bottom: 15px; color: var(--text-muted); font-size: 0.9rem;">Submit your daily work proof here to get points.</p>
+                    
+                    <div style="border: 2px dashed var(--border-color); border-radius: 8px; padding: 20px; text-align: center; background: var(--bg-light);">
+                        <i class="fas fa-cloud-upload-alt" style="font-size: 2.5rem; color: var(--primary); margin-bottom: 10px;"></i>
+                        <h4 style="font-size: 1.1rem; color: font-display;">Upload Work Proof</h4>
+                        <p style="font-size: 0.85rem; color: var(--text-muted);">PNG, JPG or JPEG (Max 5MB)</p>
+                        <input type="file" id="workProof" accept="image/*" class="input-field" style="margin-top: 10px;">
+                        <button class="btn-primary" onclick="submitWork()">Submit Work</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- রেফার সেকশন -->
+            <div id="refersSection" class="section hidden">
+                <div class="card">
+                    <h3 class="font-display" style="margin-bottom: 20px; color: var(--primary);">My Referrals</h3>
+                    <div id="refersList">
+                        <p style="text-align: center; color: var(--text-muted); padding: 20px;">Loading your referrals...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- টোস্ট মেসেজ -->
+    <div id="toast" style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #2d3748; color: white; padding: 12px 25px; border-radius: 8px; font-size: 0.9rem; font-weight: 500; box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 1000; display: none; transition: 0.3s;"></div>
+
+    <script>
+        // Firebase Config
+        const firebaseConfig = {
+          apiKey: "AIzaSyB8aEO4CyIP6l4kspuo_sJUMTwUzp0NvzU",
+          authDomain: "my-income-d85b2.firebaseapp.com",
+          databaseURL: "https://my-income-d85b2-default-rtdb.firebaseio.com",
+          projectId: "multiverse-d0fca",
+          storageBucket: "multiverse-d0fca.firebasestorage.app",
+          messagingSenderId: "731557596083",
+          appId: "1:731557596083:web:0f2c25edd8c87dfcd359c6"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        
+        let currentSubAdminId = localStorage.getItem('userId');
+
+        // সিকিউরিটি চেক: সাব-এডমিন না হলে সাব-এডমিন লগইন পেজে পাঠিয়ে দেবে
+        if (!currentSubAdminId || localStorage.getItem('userRole') !== 'subadmin') {
+            window.location.href = '../sub-admin-login.html';
+        }
+
+        // পেজ লোড হলে ডাটা আনা
+        document.addEventListener('DOMContentLoaded', () => {
+            database.ref('subAdmins/' + currentSubAdminId).once('value').then((snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    updateUI(data);
+                    loadTasks();
+                    loadRefers();
+                } else {
+                    logout();
+                }
+            });
+        });
+
+        // UI আপডেট করার ফাংশন
+        function updateUI(data) {
+            const name = data.name || data.email || "Sub-Admin";
+            const role = data.role || "N/A";
+            const initial = name.charAt(0).toUpperCase();
+            
+            document.getElementById('welcomeName').innerText = name;
+            document.getElementById('subAdminName').innerText = name;
+            document.getElementById('subAdminInitial').innerText = initial;
+            document.getElementById('subAdminRoleText').innerText = "Role: " + role;
+            document.getElementById('headerEmail').innerText = data.email || '';
+            
+            // ফটো আছে থাকলে দেখানো
+            if (data.photo) {
+                document.getElementById('subAdminPhoto').src = data.photo;
+                document.getElementById('subAdminPhoto').classList.remove('hidden');
+                document.getElementById('subAdminInitial').classList.add('hidden');
+            }
+        }
+
+        // সেকশন দেখানোর ফাংশন
+        function showSection(sectionId, element) {
+            document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+            
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            if(element) element.classList.add('active');
+
+            if (window.innerWidth < 768) {
+                document.getElementById('sidebar').classList.add('closed');
+            }
+        }
+
+        // সাইডবার টগল
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('closed');
+            document.getElementById('mainContent').classList.toggle('expanded');
+        }
+
+        // কাজে সাবমিট করা
+        async function submitWork() {
+            const fileInput = document.getElementById('workProof');
+            if (!fileInput.files || !fileInput.files[0]) {
+                showToast("Please select a file first!", "error"); return;
+            }
+            
+            showToast("Work submitted successfully!");
+            fileInput.value = ""; // ফাইল ইনপুট খালি দিলে রাখা হয়ে যাবে আবার ফাইল সিলেক্ট করে না করতে পারবেন
+        }
+
+        // টাস্ক লোড করা (পরে এটি ফায়ারবেসে থাকলে কাজ হবে)
+        async function loadTasks() {
+            // এখানে সাব-এডমিনের টাস্ক আসবে থাকলে দেখানোর জন্য কোড আসবে।
+            const tasksList = document.getElementById('tasksList');
+            tasksList.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 20px;">No tasks assigned yet.</p>';
+        }
+
+        // রেফার লোড করা (পরে এটি ফায়ারবেসে থাকলে কাজ হবে)
+        function loadRefers() {
+            const refersList = document.getElementById('refersList');
+            refersList.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 20px;">No referrals yet.</p>';
+        }
+
+        // টোস্ট দেখানোর ফাংশন
+        function showToast(message, type = "success") {
+            const toast = document.getElementById('toast');
+            toast.innerText = message;
+            toast.style.background = type === "success" ? "#27ae60" : "#e74c3c";
+            toast.style.display = "block";
+            setTimeout(() => { toast.style.display = "none"; }, 3000);
+        }
+
+        // লগআউট
+        function logout() {
+            localStorage.clear();
+            window.location.href = '../index.html';
+        }
+    </script>
+</body>
+</html>
