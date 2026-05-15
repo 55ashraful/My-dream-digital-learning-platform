@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classes - My Dream Digital</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Firebase v9 Compat Scripts (Dashboard er sathe milon) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+    <style>
+        :root {
+            --bg: #f8fafc; --bg-secondary: #ffffff; --card: #ffffff; --card-hover: #f1f5f9;
+            --border: #e2e8f0; --accent: #00b894; --accent-glow: rgba(0, 184, 148, 0.15);
+            --danger: #ef4444; --warning: #f59e0b; --success: #10b981;
+            --text: #1e293b; --text-muted: #64748b;
+        }
+
+        * { box-sizing: border-box; }
+        body { 
+            font-family: 'Hind Siliguri', sans-serif; 
+            background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; 
+            /* Copyright Protection */
+            -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;
+        }
+        .font-display { font-family: 'Poppins', sans-serif; }
+
+        /* Background matching Dashboard */
+        .bg-pattern { position: fixed; inset: 0; background: radial-gradient(ellipse at 20% 20%, rgba(0, 184, 148, 0.06) 0%, transparent 50%), radial-gradient(ellipse at 80% 80%, rgba(59, 130, 246, 0.04) 0%, transparent 50%); pointer-events: none; z-index: 0; }
+        .grid-overlay { position: fixed; inset: 0; background-image: linear-gradient(rgba(0, 184, 148, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 184, 148, 0.03) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; z-index: 0; }
+
+        /* Card & Buttons matching Dashboard */
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; transition: all 0.3s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+        .card:hover { border-color: var(--accent); box-shadow: 0 4px 20px var(--accent-glow), 0 1px 3px rgba(0,0,0,0.06); }
+        
+        .btn-primary { background: linear-gradient(135deg, var(--accent), #00a884); color: #ffffff; font-weight: 600; padding: 10px 20px; border-radius: 8px; transition: all 0.3s ease; border: none; cursor: pointer; font-size: 14px; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px var(--accent-glow); }
+        .btn-primary:disabled { background: #cbd5e1; color: white; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        .btn-off { background: #ef4444; color: white; font-weight: 600; padding: 10px 20px; border-radius: 8px; border: none; cursor: not-allowed; font-size: 14px; }
+        .btn-open { background: linear-gradient(135deg, #10b981, #059669); color: white; font-weight: 600; padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-size: 14px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); }
+        .btn-timer { background: var(--card); border: 1px solid var(--border); color: var(--text-muted); font-weight: 600; padding: 10px 20px; border-radius: 8px; font-size: 14px; }
+
+        .task-icon { width: 70px; height: 70px; border-radius: 12px; object-fit: cover; border: 2px solid var(--border); flex-shrink: 0; }
+        .task-class-badge { font-size: 13px; font-weight: 600; color: var(--accent); background: rgba(0, 184, 148, 0.1); padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(0, 184, 148, 0.2); }
+        
+        .notice-badge { font-size: 12px; font-weight: 500; color: var(--text-muted); background: #f8fafc; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 4px; }
+
+        /* Toast */
+        #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--accent); color: white; padding: 12px 24px; border-radius: 10px; font-weight: 600; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: transform 0.3s ease; z-index: 9999; opacity: 0; }
+        #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    </style>
+</head>
+<!-- Copyright Protection Body Tags -->
+<body ondragstart="return false" onselectstart="return false">
+
+    <div class="bg-pattern"></div>
+    <div class="grid-overlay"></div>
+
+    <main class="relative z-10 min-h-screen p-4 sm:p-6 max-w-3xl mx-auto">
+        <!-- Header with Back Button -->
+        <header class="flex items-center justify-between mb-6">
+            <div class="flex items-center gap-3">
+                <a href="index.html" class="text-gray-500 hover:text-emerald-600 transition">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                </a>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800">Classes & Tasks</h1>
+                    <p class="text-sm text-gray-500">Check important updates and tasks</p>
+                </div>
+            </div>
+            <img src="https://i.ibb.co/wNjHwXKF/1000033078.png" alt="Logo" class="h-10 w-10 rounded-full pointer-events-none">
+        </header>
+
+        <!-- Task List Container -->
+        <div id="tasks-list" class="space-y-4">
+            <div class="card p-8 text-center text-gray-400">Loading tasks...</div>
+        </div>
+    </main>
+
+    <div id="toast"></div>
+
+    <script>
+        // Copyright Protection
+        document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+        document.onkeydown = function(e) {
+            if(e.keyCode == 123) return false;
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) return false;
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) return false;
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) return false;
+            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false;
+            if(e.ctrlKey && e.keyCode == 'S'.charCodeAt(0)) return false;
+            if(e.ctrlKey && e.keyCode == 'C'.charCodeAt(0)) return false;
+        }
+
+        // Firebase Config (v9 Compat)
+        const firebaseConfig = {
+            apiKey: "AIzaSyB8aEO4CyIP6l4kspuo_sJUMTwUzp0NvzU",
+            authDomain: "my-income-d85b2.firebaseapp.com",
+            databaseURL: "https://my-income-d85b2-default-rtdb.firebaseio.com",
+            projectId: "my-income-d85b2",
+            storageBucket: "my-income-d85b2.firebasestorage.app",
+            messagingSenderId: "731557596083",
+            appId: "1:731557596083:web:0f2c25edd8c87dfcd359c6"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // Auth Guard & User ID from Dashboard
+        let currentUserId = localStorage.getItem('userId');
+        if (!currentUserId) {
+            window.location.href = '../login.html'; // Redirect if not logged in
+        }
+
+        let activeTimers = {};
+        let userCompletedTasks = {};
+        let availableTasksList = []; 
+
+        // --- Initialization ---
+        function initClassApp() {
+            if (!currentUserId) return;
+            listenForUserData();
+            listenForPublicTasks();
+        }
+
+        // --- Data Listeners ---
+        function listenForUserData() {
+            database.ref('users/' + currentUserId + '/completedTasks').on('value', (snapshot) => {
+                userCompletedTasks = snapshot.val() || {};
+                refreshTaskButtons();
+            });
+        }
+
+        function listenForPublicTasks() {
+            database.ref('tasks').on('value', (snapshot) => processTasks(snapshot, 'tasks'));
+            database.ref('quran_learning_tasks').on('value', (snapshot) => processTasks(snapshot, 'quran_learning_tasks'));
+            database.ref('pen_pencil_packing_tasks').on('value', (snapshot) => processTasks(snapshot, 'pen_pencil_packing_tasks'));
+            database.ref('video_watching_tasks').on('value', (snapshot) => processTasks(snapshot, 'video_watching_tasks'));
+            database.ref('graphic_design_tasks').on('value', (snapshot) => processTasks(snapshot, 'graphic_design_tasks'));
+            database.ref('social_marketing_tasks').on('value', (snapshot) => processTasks(snapshot, 'social_marketing_tasks'));
+            database.ref('facebook_marketing_tasks').on('value', (snapshot) => processTasks(snapshot, 'facebook_marketing_tasks'));
+            database.ref('web_development_tasks').on('value', (snapshot) => processTasks(snapshot, 'web_development_tasks'));
+        }
+
+        function processTasks(snapshot, source) {
+            snapshot.forEach(child => {
+                const taskData = { id: child.key, ...child.val() };
+                const existingTaskIndex = availableTasksList.findIndex(t => t.id === taskData.id && t.source === source);
+                if (existingTaskIndex > -1) {
+                    availableTasksList[existingTaskIndex] = {...taskData, source: source};
+                } else {
+                    availableTasksList.push({...taskData, source: source});
+                }
+            });
+            renderTasks();
+        }
+
+        // --- Rendering Tasks ---
+        function renderTasks() {
+            const container = document.getElementById('tasks-list');
+            container.innerHTML = '';
+
+            if (availableTasksList.length === 0) {
+                container.innerHTML = '<div class="card p-8 text-center text-gray-400">No classes available right now.</div>';
+                return;
+            }
+            
+            availableTasksList.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+
+            availableTasksList.forEach(task => {
+                const card = document.createElement('div');
+                card.className = 'card p-4 flex items-center gap-4';
+                
+                const displayText = task.notice ? String(task.notice) : "View Details";
+                const imageUrl = task.imageUrl || 'https://via.placeholder.com/100'; 
+                
+                let mainTitle = task.title || "Untitled Class";
+                let classBadgeHtml = '';
+                let displayClass = "";
+                let classFound = false;
+
+                if (task.classLevel) {
+                    displayClass = task.classLevel; classFound = true;
+                } else if (mainTitle.includes(':')) {
+                    const parts = mainTitle.split(':');
+                    displayClass = parts[parts.length - 1].trim();
+                    mainTitle = parts.slice(0, parts.length - 1).join(':').trim();
+                    if(displayClass) classFound = true;
+                } else {
+                    const regex = /\s(\S+)\s+[\d\u09E6-\u09EF]+$/;
+                    const match = mainTitle.match(regex);
+                    if (match) {
+                        const index = mainTitle.lastIndexOf(match[0]);
+                        displayClass = mainTitle.substring(index).trim();
+                        mainTitle = mainTitle.substring(0, index).trim();
+                        classFound = true;
+                    }
+                }
+
+                if (classFound && displayClass) {
+                    classBadgeHtml = `<div class="task-class-badge">${displayClass}</div>`;
+                }
+
+                card.innerHTML = `
+                    <img src="${imageUrl}" class="task-icon" alt="icon">
+                    <div class="flex-grow-1 min-w-0">
+                        <h3 class="font-semibold text-gray-800 truncate">${mainTitle}</h3>
+                        <p class="notice-badge">${displayText}</p>
+                    </div>
+                    <div class="flex flex-col items-end gap-2 ml-2">
+                        ${classBadgeHtml}
+                        <button class="btn-primary" id="btn-${task.id}" onclick="handleClaim('${task.id}', '${task.source}')">
+                            Load...
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+                updateButtonState(task.id, task.source);
+            });
+        }
+
+        // --- Button State Management ---
+        function updateButtonState(taskId, taskSource) {
+            const btn = document.getElementById(`btn-${taskId}`);
+            const task = availableTasksList.find(t => t.id === taskId && t.source === taskSource);
+            
+            if (!btn || !task) return;
+
+            const status = String(task.bonusTime || "").trim().toLowerCase();
+            const timerKey = `${taskId}-${taskSource}`;
+
+            if (activeTimers[timerKey]) { clearInterval(activeTimers[timerKey]); delete activeTimers[timerKey]; }
+            btn.className = 'btn-primary'; // Reset class
+
+            if (status === 'off') {
+                btn.innerText = "OFF"; btn.disabled = true; btn.className = 'btn-off'; return;
+            }
+            if (status === 'open') {
+                btn.innerText = "OPEN"; btn.disabled = false; btn.className = 'btn-open'; return;
+            }
+
+            const cooldownSeconds = parseInt(status) || 0;
+            if (cooldownSeconds > 0) {
+                const lastDone = userCompletedTasks[taskId];
+                if (lastDone) {
+                    const nextTime = lastDone + (cooldownSeconds * 1000);
+                    if (Date.now() < nextTime) { startCooldown(btn, nextTime, taskId, taskSource); } 
+                    else { setBtnReady(btn); }
+                } else { setBtnReady(btn); }
+            } else {
+                const lastDone = userCompletedTasks[taskId];
+                if (lastDone) { btn.innerText = "Claimed"; btn.disabled = true; } 
+                else { setBtnReady(btn); }
+            }
+        }
+
+        function refreshTaskButtons() { availableTasksList.forEach(task => updateButtonState(task.id, task.source)); }
+        function setBtnReady(btn) { btn.innerText = "Claim"; btn.disabled = false; btn.className = 'btn-primary'; }
+
+        function startCooldown(btn, endTime, taskId, taskSource) {
+            btn.disabled = true; btn.className = 'btn-timer';
+            const timerKey = `${taskId}-${taskSource}`;
+            const tick = () => {
+                const left = endTime - Date.now();
+                if (left <= 0) { clearInterval(activeTimers[timerKey]); delete activeTimers[timerKey]; setBtnReady(btn); } 
+                else {
+                    const h = Math.floor(left / 3600000).toString().padStart(2, '0');
+                    const m = Math.floor((left % 3600000) / 60000).toString().padStart(2, '0');
+                    const s = Math.floor((left % 60000) / 1000).toString().padStart(2, '0');
+                    btn.innerText = `${h}:${m}:${s}`;
+                }
+            };
+            tick(); activeTimers[timerKey] = setInterval(tick, 1000);
+        }
+
+        // --- Handling Task Claim ---
+        window.handleClaim = async function(taskId, taskSource) {
+            const task = availableTasksList.find(t => t.id === taskId && t.source === taskSource);
+            if (!task) { showToast("Task not found.", "error"); return; }
+
+            const btn = document.getElementById(`btn-${taskId}`);
+            btn.innerText = "Opening..."; btn.disabled = true;
+
+            try {
+                if (task.link) { window.open(task.link, '_blank'); }
+                await database.ref(`users/${currentUserId}/completedTasks/${taskId}`).set(Date.now());
+                showToast("Notice viewed successfully!");
+                updateButtonState(taskId, taskSource); 
+            } catch (error) {
+                console.error("Claim error:", error);
+                showToast("Error, try again.", "error");
+                updateButtonState(taskId, taskSource); 
+            }
+        }
+
+        function showToast(msg, type = 'success') {
+            const t = document.getElementById('toast');
+            t.textContent = msg; 
+            t.style.background = type === 'error' ? '#ef4444' : '#10b981';
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3000); 
+        }
+
+        // Start App
+        initClassApp();
+    </script>
+</body>
+</html>
