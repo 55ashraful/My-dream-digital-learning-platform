@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - My Dream Digital</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- Firebase Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+    <style>
+        :root {
+            --bg: #f8fafc; --bg-secondary: #ffffff; --card: #ffffff; --card-hover: #f1f5f9;
+            --border: #e2e8f0; --accent: #10b981; --accent-glow: rgba(16, 185, 129, 0.15);
+            --danger: #ef4444; --warning: #f59e0b; --success: #10b981;
+            --text: #1e293b; --text-muted: #64748b;
+        }
+        * { box-sizing: border-box; }
+        body { 
+            font-family: 'Hind Siliguri', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; 
+            -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;
+        }
+        .font-display { font-family: 'Poppins', sans-serif; }
+        .bg-pattern { position: fixed; inset: 0; background: radial-gradient(ellipse at 20% 20%, rgba(16, 185, 129, 0.06) 0%, transparent 50%), radial-gradient(ellipse at 80% 80%, rgba(59, 130, 246, 0.04) 0%, transparent 50%); pointer-events: none; z-index: 0; }
+        .grid-overlay { position: fixed; inset: 0; background-image: linear-gradient(rgba(16, 185, 129, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(16, 185, 129, 0.03) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; z-index: 0; }
+        
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; transition: all 0.3s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+        .card:hover { border-color: var(--accent); box-shadow: 0 4px 20px var(--accent-glow); }
+        
+        .btn-primary { background: linear-gradient(135deg, var(--accent), #059669); color: #ffffff; font-weight: 600; padding: 10px 20px; border-radius: 10px; transition: all 0.3s ease; border: none; cursor: pointer; font-size: 0.9rem; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px var(--accent-glow); }
+        .btn-danger { background: #ef4444; color: #fff; font-weight: 600; padding: 10px 20px; border-radius: 10px; transition: all 0.3s ease; border: none; cursor: pointer; font-size: 0.9rem; }
+        .btn-danger:hover { background: #dc2626; }
+        .btn-warning { background: #f59e0b; color: #fff; font-weight: 600; padding: 10px 20px; border-radius: 10px; transition: all 0.3s ease; border: none; cursor: pointer; font-size: 0.9rem; }
+        .btn-secondary { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 10px 20px; border-radius: 10px; transition: all 0.3s ease; cursor: pointer; }
+        
+        .input-field { background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; color: var(--text); width: 100%; transition: all 0.3s ease; -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text; user-select: text; }
+        .input-field:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+        
+        .sidebar { position: fixed; left: -320px; top: 0; width: 300px; height: 100vh; background: var(--bg-secondary); border-right: 1px solid var(--border); z-index: 1000; transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1); overflow-y: auto; box-shadow: 2px 0 10px rgba(0,0,0,0.05); }
+        .sidebar.open { left: 0; }
+        .sidebar-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(4px); z-index: 999; opacity: 0; visibility: hidden; transition: all 0.3s ease; }
+        .sidebar-overlay.show { opacity: 1; visibility: visible; }
+        
+        .menu-item { display: flex; align-items: center; gap: 12px; padding: 14px 20px; color: var(--text-muted); transition: all 0.3s ease; cursor: pointer; border-left: 3px solid transparent; }
+        .menu-item:hover, .menu-item.active { background: rgba(16, 185, 129, 0.08); color: var(--accent); border-left-color: var(--accent); }
+        .menu-item.danger { color: #ef4444; }
+        .menu-item.danger:hover { background: rgba(239, 68, 68, 0.08); border-left-color: #ef4444; }
+        
+        .three-dot { display: flex; flex-direction: column; gap: 4px; cursor: pointer; padding: 10px; }
+        .three-dot span { width: 5px; height: 5px; background: var(--accent); border-radius: 50%; }
+        
+        .stat-card { background: linear-gradient(135deg, #ffffff 0%, #f0fdf9 100%); border: 1px solid var(--accent); border-radius: 16px; padding: 20px; text-align: center; box-shadow: 0 4px 15px var(--accent-glow); transition: transform 0.2s; }
+        .stat-card:hover { transform: translateY(-3px); }
+        
+        .data-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .data-table th, .data-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+        .data-table th { background-color: var(--bg); font-weight: 600; color: var(--text); }
+        .data-table tr:hover td { background-color: #fdfdff; }
+        
+        .badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .badge-success { background: rgba(16, 185, 129, 0.15); color: #047857; }
+        .badge-pending { background: rgba(245, 158, 11, 0.15); color: #b45309; }
+        .badge-danger { background: rgba(239, 68, 68, 0.15); color: #b91c1c; }
+        .badge-info { background: rgba(59, 130, 246, 0.15); color: #1d4ed8; }
+        
+        .section { display: none; animation: fadeIn 0.3s ease-out; }
+        .section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 2000; display: none; align-items: center; justify-content: center; }
+        .modal-overlay.show { display: flex; }
+        .modal-content { background: white; padding: 25px; border-radius: 16px; width: 90%; max-width: 400px; box-shadow: 0 20px 25px rgba(0,0,0,0.1); }
+        
+        @media (max-width: 768px) {
+            .data-table th, .data-table td { padding: 8px 10px; font-size: 0.8rem; }
+        }
+    </style>
+</head>
+<body ondragstart="return false" onselectstart="return false">
+
+    <div class="bg-pattern"></div>
+    <div class="grid-overlay"></div>
+
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="p-5 border-b border-gray-200">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold text-xl">
+                    <span id="adminInitial">A</span>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-lg text-gray-800" id="sidebarName">Admin</h3>
+                    <p class="text-sm text-gray-500">Super Admin</p>
+                </div>
+            </div>
+        </div>
+        <nav class="py-4">
+            <div class="menu-item active" onclick="showSection('home', this)"><i class="w-5 h-5 text-center fas fa-tachometer-alt"></i><span>Dashboard</span></div>
+            <div class="menu-item" onclick="showSection('users', this)"><i class="w-5 h-5 text-center fas fa-users"></i><span>All Users</span></div>
+            <div class="menu-item" onclick="showSection('withdraws', this)"><i class="w-5 h-5 text-center fas fa-money-bill-wave"></i><span>Withdrawals</span></div>
+            <div class="menu-item" onclick="showSection('photos', this)"><i class="w-5 h-5 text-center fas fa-images"></i><span>Photo Submissions</span></div>
+            <div class="menu-item" onclick="showSection('notices', this)"><i class="w-5 h-5 text-center fas fa-bullhorn"></i><span>Notices</span></div>
+            <div class="menu-item danger" onclick="logout()"><i class="w-5 h-5 text-center fas fa-sign-out-alt"></i><span>Logout</span></div>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="relative z-10 min-h-screen p-4 sm:p-6">
+        <header class="flex items-center justify-between mb-6">
+            <div class="flex items-center gap-3">
+                <a href="../index.html"><img src="https://i.ibb.co/wNjHwXKF/1000033078.png" alt="Logo" class="h-10 w-10 rounded-full pointer-events-none"></a>
+                <h1 class="font-display text-xl font-bold text-gray-800">Admin Panel</h1>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="text-sm text-gray-500 hidden sm:block" id="adminEmail"></span>
+                <div class="three-dot" onclick="toggleSidebar()"><span></span><span></span><span></span></div>
+            </div>
+        </header>
+
+        <!-- Home Section -->
+        <section id="homeSection" class="section active">
+            <h2 class="text-3xl font-bold mb-6 text-gray-800">Dashboard Overview</h2>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+                <div class="stat-card"><p class="text-3xl font-bold text-emerald-600" id="statUsers">0</p><p class="text-sm text-gray-500">Total Users</p></div>
+                <div class="stat-card"><p class="text-3xl font-bold text-yellow-600" id="statPendingWd">0</p><p class="text-sm text-gray-500">Pending Withdraws</p></div>
+                <div class="stat-card"><p class="text-3xl font-bold text-blue-600" id="statPendingPhoto">0</p><p class="text-sm text-gray-500">Pending Photos</p></div>
+                <div class="stat-card"><p class="text-3xl font-bold text-red-600" id="statBanned">0</p><p class="text-sm text-gray-500">Banned Users</p></div>
+            </div>
+        </section>
+
+        <!-- Users Section -->
+        <section id="usersSection" class="section">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800">Manage Users</h2>
+            <div class="card p-5">
+                <div class="flex justify-between items-center mb-4">
+                    <input type="text" id="searchUser" class="input-field" placeholder="Search by name..." style="max-width: 250px;" onkeyup="searchUsers()">
+                </div>
+                <div style="overflow-x: auto;">
+                    <table class="data-table">
+                        <thead>
+                            <tr><th>Name</th><th>Contact</th><th>Balance</th><th>Status</th><th>Action</th></tr>
+                        </thead>
+                        <tbody id="usersList"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Withdrawals Section -->
+        <section id="withdrawsSection" class="section">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800">Withdrawal Requests</h2>
+            <div class="card p-5">
+                <div class="flex gap-2 mb-4">
+                    <button class="btn-primary" onclick="loadWithdrawals('pending')">Pending</button>
+                    <button class="btn-secondary" onclick="loadWithdrawals('approved')">Approved</button>
+                    <button class="btn-danger" onclick="loadWithdrawals('rejected')">Rejected</button>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table class="data-table">
+                        <thead><tr><th>User</th><th>Method / Acc</th><th>Amount</th><th>Action</th></tr></thead>
+                        <tbody id="withdrawList"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Photos Section -->
+        <section id="photosSection" class="section">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800">Photo Submissions</h2>
+            <div class="card p-5">
+                <div class="flex gap-2 mb-4">
+                    <button class="btn-primary" onclick="loadPhotos('pending')">Pending</button>
+                    <button class="btn-secondary" onclick="loadPhotos('approved')">Approved</button>
+                </div>
+                <div id="photoList" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+            </div>
+        </section>
+
+        <!-- Notices Section -->
+        <section id="noticesSection" class="section">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800">Manage Notices</h2>
+            <div class="card p-5 mb-6">
+                <h3 class="text-lg font-semibold mb-4">Add New Notice</h3>
+                <div class="space-y-4">
+                    <input type="text" id="noticeTitle" class="input-field" placeholder="Notice Title">
+                    <textarea id="noticeDesc" class="input-field" rows="3" placeholder="Notice Description"></textarea>
+                    <button class="btn-primary" onclick="addNotice()">Publish Notice</button>
+                </div>
+            </div>
+            <div class="card p-5">
+                <h3 class="text-lg font-semibold mb-4">Existing Notices</h3>
+                <div id="noticeList" class="space-y-3"></div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Edit Balance Modal -->
+    <div class="modal-overlay" id="balanceModal">
+        <div class="modal-content">
+            <h3 class="text-xl font-bold mb-4">Edit User Balance</h3>
+            <p class="text-sm text-gray-500 mb-2">User: <span id="modalUserName" class="font-semibold text-gray-800"></span></p>
+            <p class="text-sm text-gray-500 mb-4">Current Balance: <span id="modalCurrentBal" class="font-bold text-emerald-600"></span> TK</p>
+            <div class="flex gap-2 mb-4">
+                <input type="number" id="modalAmount" class="input-field" placeholder="Amount">
+                <select id="modalAction" class="input-field" style="max-width: 130px;">
+                    <option value="add">Add (+)</option>
+                    <option value="deduct">Deduct (-)</option>
+                    <option value="set">Set (=)</option>
+                </select>
+            </div>
+            <div class="flex gap-3">
+                <button class="btn-primary flex-1" onclick="saveBalance()">Save</button>
+                <button class="btn-secondary flex-1" onclick="closeModal()">Cancel</button>
+            </div>
+            <input type="hidden" id="modalUserId">
+        </div>
+    </div>
+
+    <div id="toast" class="fixed bottom-4 right-4 bg-emerald-600 text-white px-6 py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50"><span id="toastMessage"></span></div>
+
+    <script>
+        // Copyright Protection
+        document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+        document.onkeydown = function(e) {
+            if(e.keyCode == 123) return false;
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) return false;
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) return false;
+            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false;
+            if(e.ctrlKey && e.keyCode == 'S'.charCodeAt(0)) return false;
+            if(e.ctrlKey && e.keyCode == 'C'.charCodeAt(0)) return false;
+        }
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyB8aEO4CyIP6l4kspuo_sJUMTwUzp0NvzU",
+          authDomain: "my-income-d85b2.firebaseapp.com",
+          databaseURL: "https://my-income-d85b2-default-rtdb.firebaseio.com",
+          projectId: "my-income-d85b2",
+          storageBucket: "my-income-d85b2.firebasestorage.app",
+          messagingSenderId: "731557596083",
+          appId: "1:731557596083:web:0f2c25edd8c87dfcd359c6"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        let currentAdminId = localStorage.getItem('userId');
+        if (!currentAdminId || localStorage.getItem('userRole') !== 'admin') {
+            window.location.href = '../admin-login.html';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAdminData();
+            loadStats();
+            loadAllUsers();
+            loadWithdrawals('pending');
+            loadPhotos('pending');
+            loadNotices();
+        });
+
+        function loadAdminData() {
+            database.ref('admins/' + currentAdminId).once('value').then((snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    document.getElementById('sidebarName').innerText = data.name || data.email || "Admin";
+                    document.getElementById('adminEmail').innerText = data.email || "";
+                    document.getElementById('adminInitial').innerText = (data.name || data.email || "A").charAt(0).toUpperCase();
+                } else { logout(); }
+            });
+        }
+
+        function loadStats() {
+            database.ref('users').on('value', (snapshot) => {
+                let users = 0, banned = 0, pendingW = 0, pendingP = 0;
+                if(snapshot.exists()) {
+                    snapshot.forEach(child => {
+                        users++;
+                        const u = child.val();
+                        if(u.status === 'blocked') banned++;
+                        if(u.history) {
+                            Object.values(u.history).forEach(h => { if(h.type === 'withdraw_pending') pendingW++; });
+                        }
+                        if(u.submissions) {
+                            Object.values(u.submissions).forEach(s => { if(s.status === 'pending') pendingP++; });
+                        }
+                    });
+                }
+                document.getElementById('statUsers').innerText = users;
+                document.getElementById('statBanned').innerText = banned;
+                document.getElementById('statPendingWd').innerText = pendingW;
+                document.getElementById('statPendingPhoto').innerText = pendingP;
+            });
+        }
+
+        let allUsersCache = [];
+        function loadAllUsers() {
+            const usersList = document.getElementById('usersList');
+            database.ref('users').on('value', (snapshot) => {
+                allUsersCache = [];
+                if (!snapshot.exists()) { usersList.innerHTML = '<tr><td colspan="5" class="text-center text-gray-400 p-4">No users found</td></tr>'; return; }
+                snapshot.forEach((child) => {
+                    const user = child.val(); user.uid = child.key;
+                    allUsersCache.push(user);
+                });
+                renderUsers(allUsersCache);
+            });
+        }
+
+        function renderUsers(users) {
+            const usersList = document.getElementById('usersList');
+            usersList.innerHTML = '';
+            users.forEach(user => {
+                const statusClass = user.status === 'blocked' ? 'badge-danger' : 'badge-success';
+                const statusText = user.status === 'blocked' ? 'Banned' : 'Active';
+                const banBtnText = user.status === 'blocked' ? 'Unban' : 'Ban';
+                const banBtnClass = user.status === 'blocked' ? 'btn-primary' : 'btn-danger';
+                
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="font-medium">${user.firstName || ''} ${user.lastName || ''}</td>
+                    <td class="text-gray-500 text-sm">${user.email || user.whatsapp || 'N/A'}</td>
+                    <td class="font-bold text-emerald-600">${user.balance || 0} TK</td>
+                    <td><span class="badge ${statusClass}">${statusText}</span></td>
+                    <td class="flex gap-2">
+                        <button class="btn-primary text-xs" onclick="openBalanceModal('${user.uid}', '${user.firstName}', ${user.balance || 0})">Balance</button>
+                        <button class="${banBtnClass} text-xs" onclick="toggleBan('${user.uid}', '${user.status}')">${banBtnText}</button>
+                    </td>
+                `;
+                usersList.appendChild(tr);
+            });
+        }
+
+        function searchUsers() {
+            const query = document.getElementById('searchUser').value.toLowerCase();
+            const filtered = allUsersCache.filter(u => (`${u.firstName} ${u.lastName}`).toLowerCase().includes(query) || (u.email && u.email.toLowerCase().includes(query)));
+            renderUsers(filtered);
+        }
+
+        function openBalanceModal(uid, name, bal) {
+            document.getElementById('modalUserId').value = uid;
+            document.getElementById('modalUserName').innerText = name;
+            document.getElementById('modalCurrentBal').innerText = bal;
+            document.getElementById('modalAmount').value = '';
+            document.getElementById('balanceModal').classList.add('show');
+        }
+
+        function closeModal() { document.getElementById('balanceModal').classList.remove('show'); }
+
+        function saveBalance() {
+            const uid = document.getElementById('modalUserId').value;
+            const currentBal = parseFloat(document.getElementById('modalCurrentBal').innerText);
+            const amount = parseFloat(document.getElementById('modalAmount').value);
+            const action = document.getElementById('modalAction').value;
+
+            if (isNaN(amount) || amount < 0) { showToast('Invalid amount', 'error'); return; }
+
+            let newBal = currentBal;
+            if (action === 'add') newBal += amount;
+            else if (action === 'deduct') newBal -= amount;
+            else if (action === 'set') newBal = amount;
+
+            if (newBal < 0) newBal = 0;
+
+            database.ref('users/' + uid + '/balance').set(newBal).then(() => {
+                showToast('Balance updated!');
+                closeModal();
+            });
+        }
+
+        function toggleBan(uid, status) {
+            const newStatus = status === 'blocked' ? 'active' : 'blocked';
+            if(confirm(`Are you sure you want to ${newStatus === 'blocked' ? 'BAN' : 'UNBAN'} this user?`)) {
+                database.ref('users/' + uid + '/status').set(newStatus).then(() => showToast(`User ${newStatus}!`));
+            }
+        }
+
+        // Withdrawals
+        function loadWithdrawals(type) {
+            const list = document.getElementById('withdrawList');
+            list.innerHTML = '<tr><td colspan="4" class="text-center p-4">Loading...</td></tr>';
+            database.ref('users').once('value').then(snapshot => {
+                list.innerHTML = '';
+                let found = false;
+                snapshot.forEach(child => {
+                    const user = child.val();
+                    if(user.history) {
+                        Object.values(user.history).forEach(h => {
+                            if(h.type === `withdraw_${type}`) {
+                                found = true;
+                                const tr = document.createElement('tr');
+                                tr.innerHTML = `
+                                    <td class="font-medium">${user.firstName || ''}</td>
+                                    <td class="text-sm">${h.title}</td>
+                                    <td class="font-bold text-red-500">${h.amount} TK</td>
+                                    <td>
+                                        ${type === 'pending' ? `
+                                        <button class="btn-primary text-xs mr-1" onclick="actionWithdraw('${child.key}', '${h.date}', '${h.amount}', '${h.title}', 'approved')">Approve</button>
+                                        <button class="btn-danger text-xs" onclick="actionWithdraw('${child.key}', '${h.date}', '${h.amount}', '${h.title}', 'rejected')">Reject</button>` : 
+                                        `<span class="badge ${type === 'approved' ? 'badge-success' : 'badge-danger'}">${type}</span>`}
+                                    </td>
+                                `;
+                                list.appendChild(tr);
+                            }
+                        });
+                    }
+                });
+                if(!found) list.innerHTML = `<tr><td colspan="4" class="text-center text-gray-400 p-4">No ${type} withdrawals</td></tr>`;
+            });
+        }
+
+        function actionWithdraw(uid, date, amount, title, status) {
+            database.ref('users/' + uid).once('value').then(snapshot => {
+                let user = snapshot.val();
+                let history = user.history || [];
+                let refundDone = false;
+
+                let updatedHistory = history.map(h => {
+                    if(h.date === date && h.type === 'withdraw_pending' && h.amount == amount && h.title === title) {
+                        if(status === 'rejected' && !refundDone) {
+                            user.balance = (user.balance || 0) + parseFloat(amount); // Refund balance
+                            refundDone = true;
+                        }
+                        return { ...h, type: `withdraw_${status}` };
+                    }
+                    return h;
+                });
+
+                let updates = { history: updatedHistory };
+                if(refundDone) updates.balance = user.balance;
+
+                database.ref('users/' + uid).update(updates).then(() => {
+                    showToast(`Withdraw ${status}!`);
+                    loadWithdrawals('pending');
+                    loadStats();
+                });
+            });
+        }
+
+        // Photos
+        function loadPhotos(type) {
+            const list = document.getElementById('photoList');
+            list.innerHTML = '<p class="text-gray-400 text-center col-span-2 py-8">Loading...</p>';
+            database.ref('users').once('value').then(snapshot => {
+                list.innerHTML = '';
+                let found = false;
+                snapshot.forEach(child => {
+                    const user = child.val();
+                    if(user.submissions) {
+                        Object.entries(user.submissions).forEach(([key, sub]) => {
+                            if(sub.status === type) {
+                                found = true;
+                                const div = document.createElement('div');
+                                div.className = 'card p-4 flex flex-col gap-3';
+                                div.innerHTML = `
+                                    <img src="${sub.photo}" class="w-full h-40 object-cover rounded-lg pointer-events-none">
+                                    <div>
+                                        <p class="font-medium text-gray-800">${sub.title}</p>
+                                        <p class="text-sm text-gray-500">By: ${user.firstName || 'User'} | ${sub.date}</p>
+                                    </div>
+                                    ${type === 'pending' ? `
+                                    <div class="flex gap-2">
+                                        <button class="btn-primary flex-1 text-xs" onclick="actionPhoto('${child.key}', '${key}', 'approved')">Approve (+2 TK)</button>
+                                        <button class="btn-danger flex-1 text-xs" onclick="actionPhoto('${child.key}', '${key}', 'rejected')">Reject</button>
+                                    </div>` : `<span class="badge ${type === 'approved' ? 'badge-success' : 'badge-danger'} w-fit">${type}</span>`}
+                                `;
+                                list.appendChild(div);
+                            }
+                        });
+                    }
+                });
+                if(!found) list.innerHTML = '<p class="text-gray-400 text-center col-span-2 py-8">No pending photos</p>';
+            });
+        }
+
+        function actionPhoto(uid, subKey, status) {
+            database.ref('users/' + uid).once('value').then(snapshot => {
+                let user = snapshot.val();
+                let updates = {};
+                
+                updates[`submissions/${subKey}/status`] = status;
+
+                if(status === 'approved') {
+                    updates.balance = (user.balance || 0) + 2;
+                    updates.photosSubmitted = (user.photosSubmitted || 0) + 1; // assuming this tracks approved
+                    let history = user.history || [];
+                    history.unshift({ title: 'Photo Approved Bonus', type: 'photo', amount: 2, date: new Date().toLocaleDateString() });
+                    updates.history = history;
+                }
+
+                database.ref('users/' + uid).update(updates).then(() => {
+                    showToast(`Photo ${status}!`);
+                    loadPhotos('pending');
+                    loadStats();
+                });
+            });
+        }
+
+        // Notices
+        function addNotice() {
+            const title = document.getElementById('noticeTitle').value;
+            const desc = document.getElementById('noticeDesc').value;
+            if(!title || !desc) { showToast('Fill all fields', 'error'); return; }
+
+            database.ref('notices').push({ title, desc, date: new Date().toLocaleDateString() }).then(() => {
+                showToast('Notice Added!');
+                document.getElementById('noticeTitle').value = '';
+                document.getElementById('noticeDesc').value = '';
+            });
+        }
+
+        function loadNotices() {
+            const list = document.getElementById('noticeList');
+            database.ref('notices').on('value', snapshot => {
+                list.innerHTML = '';
+                if(!snapshot.exists()) { list.innerHTML = '<p class="text-gray-400 text-center">No notices</p>'; return; }
+                snapshot.forEach(child => {
+                    const n = child.val();
+                    const div = document.createElement('div');
+                    div.className = 'flex justify-between items-center p-4 bg-gray-50 rounded-lg border';
+                    div.innerHTML = `
+                        <div>
+                            <h4 class="font-semibold text-gray-800">${n.title}</h4>
+                            <p class="text-sm text-gray-500">${n.desc}</p>
+                            <p class="text-xs text-gray-400 mt-1">${n.date}</p>
+                        </div>
+                        <button class="btn-danger text-xs" onclick="deleteNotice('${child.key}')">Delete</button>
+                    `;
+                    list.appendChild(div);
+                });
+            });
+        }
+
+        function deleteNotice(id) {
+            if(confirm('Delete this notice?')) {
+                database.ref('notices/' + id).remove().then(() => showToast('Notice Deleted!'));
+            }
+        }
+
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebarOverlay').classList.toggle('show'); }
+        
+        function showSection(sectionId, element) {
+            document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+            document.getElementById(sectionId + 'Section').classList.add('active');
+            document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
+            if(element) element.classList.add('active');
+            if (window.innerWidth < 768) toggleSidebar();
+        }
+
+        function showToast(message, type = 'success') { const t = document.getElementById('toast'); const m = document.getElementById('toastMessage'); m.textContent = message; t.style.background = type === 'success' ? '#10b981' : '#ef4444'; t.classList.remove('translate-y-20', 'opacity-0'); t.classList.add('translate-y-0', 'opacity-100'); setTimeout(() => { t.classList.remove('translate-y-0', 'opacity-100'); t.classList.add('translate-y-20', 'opacity-0'); }, 3000); }
+
+        function logout() { localStorage.clear(); window.location.href = '../index.html'; }
+    </script>
+</body>
+</html>
