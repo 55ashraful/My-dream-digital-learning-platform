@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - My Dream Digital</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- Firebase Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+    <style>
+        :root {
+            --primary: #6a11cb;
+            --secondary: #2575fc;
+            --primary-light: #f0ebff;
+            --text-dark: #2c3e50;
+            --text-muted: #7f8c8d;
+            --bg-light: #f4f6f9;
+            --card-bg: #ffffff;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.03);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: 'Hind Siliguri', sans-serif; background: var(--bg-light); color: var(--text-dark); 
+            min-height: 100vh; display: flex; 
+        }
+        .font-display { font-family: 'Poppins', sans-serif; }
+
+        /* ====== কপিরাইট প্রটেকশনের জন্য নতুন CSS যুক্ত করা হয়েছে ====== */
+        body {
+            -webkit-user-select: none; /* Chrome, Safari, Opera */
+            -moz-user-select: none;    /* Firefox */
+            -ms-user-select: none;     /* Internet Explorer/Edge */
+            user-select: none;         /* Non-prefixed version */
+        }
+        
+        /* ইনপুট ফিল্ডে টাইপ করার জন্য সিলেকশন অন রাখা হয়েছে */
+        input, textarea {
+            -webkit-user-select: text !important;
+            -moz-user-select: text !important;
+            -ms-user-select: text !important;
+            user-select: text !important;
+        }
+        
+        /* ইমেজ ড্র্যাগ করা বন্ধ করার জন্য */
+        img {
+            -webkit-user-drag: none;
+            pointer-events: none; /* এটি ইমেজে রাইট ক্লিক করে সেভ করা বন্ধ করবে */
+        }
+
+        /* সাইডবার */
+        .sidebar {
+            width: 280px; background: var(--card-bg); border-right: 1px solid var(--border-color);
+            padding: 20px 0; display: flex; flex-direction: column; position: fixed;
+            height: 100vh; left: 0; top: 0; z-index: 50; transition: transform 0.3s ease;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+        }
+        .sidebar.closed { transform: translateX(-100%); }
+        .sidebar-header {
+            padding: 0 20px 20px; border-bottom: 1px solid var(--border-color);
+            display: flex; align-items: center; gap: 12px;
+        }
+        .sidebar-avatar {
+            width: 45px; height: 45px; border-radius: 50%; background: linear-gradient(135deg, #28a745, #20bf6b);
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: 700; font-size: 1.2rem; overflow: hidden;
+        }
+        .sidebar-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .nav-menu { padding: 15px 10px; flex: 1; }
+        .nav-item {
+            display: flex; align-items: center; gap: 12px; padding: 12px 15px;
+            color: var(--text-muted); border-radius: 8px; cursor: pointer; transition: 0.2s;
+            margin-bottom: 5px; font-weight: 500; font-size: 0.95rem;
+        }
+        .nav-item:hover, .nav-item.active { background: #e8f5e9; color: #28a745; }
+        .nav-item i { width: 20px; text-align: center; }
+        .nav-item.danger { color: #e74c3c; }
+        .nav-item.danger:hover { background: #fce4e4; }
+
+        /* মেইন কনটেন্ট */
+        .main-content {
+            flex: 1; margin-left: 280px; padding: 20px; transition: margin-left 0.3s ease;
+        }
+        .main-content.expanded { margin-left: 0; }
+        .top-bar {
+            background: var(--card-bg); padding: 15px 20px; border-radius: 12px;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 25px; box-shadow: var(--shadow-sm);
+        }
+        .toggle-btn { 
+            display: none; background: white; border: 1px solid var(--border-color); 
+            padding: 8px 12px; border-radius: 8px; cursor: pointer; color: var(--text-dark); 
+        }
+
+        /* কার্ডস এবং টেবিল */
+        .card {
+            background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px;
+            padding: 25px; margin-bottom: 20px; box-shadow: var(--shadow-sm);
+        }
+        .stat-card {
+            background: var(--card-bg); border: 1px solid var(--border-color); 
+            border-radius: 12px; padding: 20px; text-align: center;
+            box-shadow: var(--shadow-sm); transition: transform 0.2s;
+        }
+        .stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+        
+        /* টেবিল স্টাইল */
+        .data-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .data-table th, .data-table td {
+            padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 0.9rem;
+        }
+        .data-table th { background-color: var(--bg-light); font-weight: 600; color: var(--text-dark); }
+        .data-table tr:hover td { background-color: #fdfdff; }
+        .badge {
+            padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; display: inline-block;
+        }
+        .badge-success { background: #e8f5e9; color: #27ae60; }
+        .badge-pending { background: #fff3e0; color: #f39c12; }
+        .badge-danger { background: #fdecea; color: #e74c3c; }
+        
+        .btn-sm {
+            padding: 6px 12px; border: none; border-radius: 6px; font-size: 0.85rem;
+            cursor: pointer; font-weight: 600; transition: 0.2s;
+        }
+        .btn-success { background: #27ae60; color: white; }
+        .btn-danger { background: #e74c3c; color: white; }
+        .btn-sm:hover { opacity: 0.8; transform: translateY(-1px); }
+        
+        .section { display: none; animation: fadeIn 0.3s ease-out; }
+        .section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); position: fixed; }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+            .toggle-btn { display: block; }
+            .data-table th, .data-table td { padding: 8px 10px; font-size: 0.8rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- সাইডবার -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-avatar"><span id="adminInitial">A</span></div>
+            <div>
+                <h4 class="font-display" style="font-size: 1.1rem; color: #28a745;">Admin Panel</h4>
+                <p style="font-size: 0.8rem; color: var(--text-muted);" id="adminRoleText">Super Admin</p>
+            </div>
+        </div>
+        <nav class="nav-menu">
+            <div class="nav-item active" onclick="showSection('home', this)">📊 Dashboard</div>
+            <div class="nav-item" onclick="showSection('users', this)">👥 All Users</div>
+            <div class="nav-item" onclick="showSection('subadmins', this)">🛡️ Sub-Admins</div>
+            <div class="nav-item" onclick="showSection('withdrawals', this)">💸 Withdraw Requests</div>
+            <div class="nav-item danger" onclick="logout()">🚪 Logout</div>
+        </nav>
+    </aside>
+
+    <!-- মেইন কনটেন্ট -->
+    <main class="main-content" id="mainContent">
+        <div class="top-bar">
+            <div class="flex items-center gap-3">
+                <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
+                <h3 class="font-display" style="font-weight: 600;">Welcome, <span style="color: #28a745;" id="adminName">Admin</span></h3>
+            </div>
+            <span style="font-size: 0.9rem; color: var(--text-muted);" id="adminEmail">admin@email.com</span>
+        </div>
+
+        <div class="container">
+            <!-- ড্যাশবোর্ড হোম -->
+            <div id="homeSection" class="section active">
+                <h2 class="font-display" style="font-size: 1.8rem; margin-bottom: 20px; color: var(--text-dark);">Dashboard Overview</h2>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                    <div class="stat-card">
+                        <h4 class="font-display" style="font-size: 2rem; color: var(--primary);">0</h4>
+                        <p style="font-size: 0.9rem; color: var(--text-muted);">Total Users</p>
+                    </div>
+                    <div class="stat-card">
+                        <h4 class="font-display" style="font-size: 2rem; color: #f39c12;">0</h4>
+                        <!-- আগের ভুল font-size: 0 9rem; ঠিক করা হয়েছে -->
+                        <p style="font-size: 0.9rem; color: var(--text-muted);">Sub-Admins</p>
+                    </div>
+                    <div class="stat-card">
+                        <h4 class="font-display" style="font-size: 2rem; color: #e74c3c;">0</h4>
+                        <p style="font-size: 0.9rem; color: var(--text-muted);">Pending Withdraws</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ইউজার ম্যানেজমেন্ট -->
+            <div id="usersSection" class="section">
+                <div class="card">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-display" style="color: var(--primary);">Manage Users</h3>
+                        <input type="text" id="searchUser" class="input-field" placeholder="Search by name or email..." style="max-width: 250px;" onkeyup="searchUsers()">
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email / Phone</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersList">
+                                <tr><td colspan="4" style="text-align:center; padding: 20px; color: var(--text-muted);">Loading data...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- সাব-এডমিন ম্যানেজমেন্ট -->
+            <div id="subadminsSection" class="section">
+                <div class="card">
+                    <h3 class="font-display" style="color: var(--primary); margin-bottom: 20px;">Manage Sub-Admins</h3>
+                    <div style="overflow-x: auto;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email / Phone</th>
+                                    <th>Role</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="subAdminsList">
+                                <tr><td colspan="4" style="text-align:center; padding: 20px; color: var(--text-muted);">Loading data...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- উইথড্র রিকোয়েস্ট -->
+            <div id="withdrawsSection" class="section">
+                <div class="card">
+                    <h3 class="font-display" style="color: #e74c3c; margin-bottom: 20px;">Pending Withdraw Requests</h3>
+                    <div style="overflow-x: auto;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Amount</th>
+                                    <th>Method</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="withdrawList">
+                                <tr><td colspan="4" style="text-align:center; padding: 20px; color: var(--text-muted);">Loading data...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- টোস্ট মেসেজ -->
+    <div id="toast" style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #2d3748; color: white; padding: 12px 25px; border-radius: 8px; font-size: 0.9rem; font-weight: 500; box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 1000; display: none;"></div>
+
+    <script>
+        // Firebase Config
+        const firebaseConfig = {
+          apiKey: "AIzaSyB8aEO4CyIP6l4kspuo_sJUMTwUzp0NvzU",
+          authDomain: "my-income-d85b2.firebaseapp.com",
+          databaseURL: "https://my-income-d85b2-default-rtdb.firebaseio.com",
+          projectId: "my-income-d85b2",
+          storageBucket: "my-income-d85b2.firebasestorage.app",
+          messagingSenderId: "731557596083",
+          appId: "1:731557596083:web:0f2c25edd8c87dfcd359c6"
+        };
+        
+        // আগের ভুল firebase_db এর বদলে সঠিক firebaseConfig ব্যবহার করা হয়েছে
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        let currentAdminId = localStorage.getItem('userId');
+
+        // সিকিউরিটি চেক: এডমিন না হলে লগইন পেজে পাঠানো
+        if (!currentAdminId || localStorage.getItem('userRole') !== 'admin') {
+            window.location.href = '../admin-login.html';
+        }
+
+        // ====== কপিরাইট প্রটেকশন জাভাস্ক্রিপ্ট ======
+        
+        // ১. রাইট ক্লিক বন্ধ করা
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+
+        // ২. কপি, কাট এবং পেস্ট বন্ধ করা
+        document.addEventListener('copy', function(e) { e.preventDefault(); });
+        document.addEventListener('cut', function(e) { e.preventDefault(); });
+        
+        // ৩. কিবোর্ড শর্টকাট বন্ধ করা (Ctrl+U, Ctrl+S, Ctrl+C, Ctrl+Shift+I, F12)
+        document.addEventListener('keydown', function(e) {
+            // F12 কি বন্ধ
+            if (e.key === 'F12') {
+                e.preventDefault();
+            }
+            // Ctrl+Shift+I (Inspect) বন্ধ
+            if (e.ctrlKey && e.shiftKey && e.key === 'I') {
+                e.preventDefault();
+            }
+            // Ctrl+Shift+J (Console) বন্ধ
+            if (e.ctrlKey && e.shiftKey && e.key === 'J') {
+                e.preventDefault();
+            }
+            // Ctrl+U (View Source) বন্ধ
+            if (e.ctrlKey && e.key === 'u') {
+                e.preventDefault();
+            }
+            // Ctrl+S (Save) বন্ধ
+            if (e.ctrlKey && e.key === 's') {
+                e.preventDefault();
+            }
+            // Ctrl+C (Copy) বন্ধ
+            if (e.ctrlKey && e.key === 'c') {
+                e.preventDefault();
+            }
+            // Ctrl+P (Print) বন্ধ
+            if (e.ctrlKey && e.key === 'p') {
+                e.preventDefault();
+            }
+        });
+
+        // ৪. ড্র্যাগ করে ইমেজ বা টেক্সট সরানো বন্ধ করা
+        document.addEventListener('dragstart', function(e) {
+            e.preventDefault();
+        });
+
+
+        // পেজ লোড হলে ডাটা আনা
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAdminData();
+            loadStats();
+            loadAllUsers();
+            loadAllSubAdmins();
+            loadPendingWithdraws();
+        });
+
+        // এডমিনের নাম ও ইমেইল আনা
+        function loadAdminData() {
+            database.ref('admins/' + currentAdminId).once('value').then((snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    document.getElementById('adminName').innerText = data.name || data.email || "Admin";
+                    document.getElementById('adminEmail').innerText = data.email || "";
+                    document.getElementById('adminInitial').innerText = (data.name || data.email || "A").charAt(0).toUpperCase();
+                } else {
+                    logout();
+                }
+            });
+        }
+
+        // স্ট্যাটস আনা
+        function loadStats() {
+            // মোট ইউজার
+            database.ref('users').on('value', (snapshot) => {
+                document.querySelector('#homeSection .stat-card:nth-child(1) h4').innerText = snapshot.numChildren();
+            });
+            // মোট সাব-এডমিন
+            database.ref('subAdmins').on('value', (snapshot) => {
+                document.querySelector('#homeSection .stat-card:nth-child(2) h4').innerText = snapshot.numChildren();
+            });
+            // পেন্ডিং উইথড্র
+            database.ref('withdrawals').orderByChild('status').equalTo('pending').on('value', (snapshot) => {
+                document.querySelector('#homeSection .stat-card:nth-child(3) h4').innerText = snapshot.numChildren();
+            });
+        }
+
+        // সব ইউজারের লিস্ট আনা
+        function loadAllUsers() {
+            const usersList = document.getElementById('usersList');
+            database.ref('users').on('value', (snapshot) => {
+                usersList.innerHTML = '';
+                if (!snapshot.exists()) {
+                    usersList.innerHTML = '<tr><td colspan="4" style="text-align:center; color: #7f8c8d;">No users found.</td></tr>';
+                    return;
+                }
+                snapshot.forEach((child) => {
+                    const user = child.val();
+                    const statusClass = user.status === 'active' ? 'badge-success' : 'badge-danger';
+                    const statusText = user.status === 'active' ? 'Active' : 'Blocked';
+                    
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td style="font-weight: 500;">${user.firstName || ''} ${user.lastName || ''}</td>
+                        <td style="color: var(--text-muted);">${user.email || user.whatsapp || ''}</td>
+                        <td><span class="badge ${statusClass}">${statusText}</span></td>
+                        <td>
+                            <button class="btn-sm btn-danger" onclick="blockUser('${child.key}')">Block</button>
+                        </td>
+                    `;
+                    usersList.appendChild(tr);
+                });
+            });
+        }
+
+        // সব সাব-এডমিনের লিস্ট আনা
+        function loadAllSubAdmins() {
+            const subAdminsList = document.getElementById('subAdminsList');
+            database.ref('subAdmins').on('value', (snapshot) => {
+                subAdminsList.innerHTML = '';
+                if (!snapshot.exists()) {
+                    subAdminsList.innerHTML = '<tr><td colspan="4" style="text-color: #7f8d8d; text-align: center;">No sub-admins found.</td></tr>';
+                    return;
+                }
+                snapshot.forEach((child) => {
+                    const subAdmin = child.val();
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td style="font-weight: 500;">${subAdmin.name || subAdmin.email || ''}</td>
+                        <td style="color: var(--text-muted);">${subAdmin.email || subAdmin.whatsapp || ''}</td>
+                        <td><span class="badge" style="background: #fff3e0; color: #f39c12;">${subAdmin.role || 'N/A'}</span></td>
+                        <td>
+                            <button class="btn-sm btn-danger" onclick="deleteSubAdmin('${child.key}')">Delete</button>
+                        </td>
+                    `;
+                    subAdminsList.appendChild(tr);
+                });
+            });
+        }
+
+        // পেনডিং উইথড্র লিস্ট আনা
+        function loadPendingWithdraws() {
+            const withdrawList = document.getElementById('withdrawList');
+            database.ref('withdraws').orderByChild('status').equalTo('pending').on('value', (snapshot) => {
+                withdrawList.innerHTML = '';
+                if (!snapshot.exists()) {
+                    withdrawList.innerHTML = '<tr><td colspan="4" style="text-align:center; color: #7f8d8d;">No pending requests.</td></tr>';
+                    return;
+                }
+                snapshot.forEach((child) => {
+                    const wd = child.val();
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td style="font-weight: 500;">${wd.userName || wd.userId || 'User'}</td>
+                        <td style="font-weight: 600; color: #e74c3c;">${wd.amount || 0} TK</td>
+                        <td><span class="badge" style="background: #e8f5e9; color: #27ae60;">${wd.method || 'N/A'}</span></td>
+                        <td>
+                            <button class="btn-sm btn-success" onclick="approveWithdraw('${child.key}')">Approve</button>
+                        <button class="btn-sm btn-danger" onclick="rejectWithdraw('${child.key}')" style="margin-left: 5px;">Reject</button>
+                        </td>
+                    `;
+                    withdrawList.appendChild(tr);
+                });
+            });
+        }
+
+        // ইউজার ব্লক করা
+        function blockUser(userId) {
+            if (confirm('Are you sure you want to block this user?')) {
+                database.ref('users/' + userId + '/status').set('blocked').then(() => {
+                    showToast('User Blocked!');
+                });
+            }
+        }
+
+        // সাব-এডমিন ডিলিট করা
+        function deleteSubAdmin(userId) {
+            if (confirm('Are you sure you want to delete this Sub-Admin? This cannot be undone!')) {
+                database.ref('subAdmins/' + userId).remove().then(() => {
+                    showToast('Sub-Admin Deleted!');
+                });
+            }
+        }
+
+        // উইথড্র Approve করা
+        function approveWithdraw(wdId) {
+            database.ref('withdraws/' + wdId + '/status').set('approved').then(() => {
+                showToast('Withdraw Approved!');
+            });
+        }
+
+        // উইথ্র Reject করা
+        function rejectWithdraw(wdId) {
+            database.ref('withdraws/' + wdId + '/status').set('rejected').then(() => {
+                showToast('Withdraw Rejected!');
+            });
+        }
+
+        // সেকশন দেখানোর ফাংশন
+        function showSection(sectionId, element) {
+            document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            if(element) element.classList.add('active');
+
+            if (window.innerWidth < 768) {
+                document.getElementById('sidebar').classList.add('closed');
+            }
+        }
+
+        // সাইডবার টগল
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('closed');
+            document.getElementById('mainContent').classList.toggle('expanded');
+        }
+
+        // টোস্ট দেখানো
+        function showToast(message, type = "success") {
+            const toast = document.getElementById('toast');
+            toast.innerText = message;
+            toast.style.background = type === "success" ? "#27ae60" : "#e74c3c";
+            toast.style.display = "block";
+            setTimeout(() => { toast.style.display = "none"; }, 3000);
+        }
+
+        // লগআউট
+        function logout() {
+            localStorage.clear();
+            window.location.href = '../index.html';
+        }
+    </script>
+</body>
+</html>
