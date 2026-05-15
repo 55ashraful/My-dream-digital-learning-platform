@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Students Panel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(to right, #6a11cb, #2575fc);
+            --primary-color: #6a11cb;
+            --secondary-color: #2575fc;
+            --text-dark: #333;
+            --text-light: #666;
+            --bg-light: #f7f7f7;
+            --card-bg: #fff;
+            --border-color: #eee;
+            --box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            background-color: var(--bg-light); 
+            color: var(--text-dark); 
+            line-height: 1.6; 
+            -webkit-user-select: none; 
+            -moz-user-select: none; 
+            -ms-user-select: none; 
+            user-select: none; 
+        }
+        a { color: var(--secondary-color); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        header { background-color: var(--card-bg); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--box-shadow); position: sticky; top: 0; z-index: 1000; }
+        header .logo { display: flex; align-items: center; gap: 10px; }
+        header .logo img { height: 40px; width: 40px; border-radius: 5px; pointer-events: none; }
+        header .logo span { font-weight: 600; font-size: 1.1em; color: var(--text-dark); }
+        .menu-toggle { font-size: 1.5em; cursor: pointer; color: var(--text-dark); }
+
+        .mobile-nav { position: fixed; top: 0; right: -100%; width: 80%; max-width: 300px; height: 100%; background-color: var(--card-bg); box-shadow: -4px 0 15px rgba(0, 0, 0, 0.1); transition: right 0.3s ease-in-out; z-index: 1001; display: flex; flex-direction: column; padding: 20px; color: var(--text-dark); overflow-y: auto; }
+        .mobile-nav.open { right: 0; }
+        .mobile-nav .nav-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border-color); }
+        .mobile-nav .nav-header img { height: 40px; width: 40px; border-radius: 5px; pointer-events: none; }
+        .mobile-nav .close-nav { font-size: 1.5em; cursor: pointer; }
+        .mobile-nav .contact-info { margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color); }
+        .mobile-nav .contact-info p { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 0.9em; color: var(--text-light); }
+        .mobile-nav .contact-info p i { color: var(--primary-color); }
+        .mobile-nav .nav-links { list-style: none; flex-grow: 1; }
+        .mobile-nav .nav-links li { margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--border-color); }
+        .mobile-nav .nav-links li:last-child { border-bottom: none; }
+        .mobile-nav .nav-links a { font-weight: 500; color: var(--text-dark); display: block; padding: 5px 0; }
+        .mobile-nav .nav-links a:hover { color: var(--primary-color); text-decoration: none; }
+        .mobile-nav .find-us { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color); }
+        .mobile-nav .find-us h4 { font-size: 0.9em; color: var(--text-light); margin-bottom: 15px; text-transform: uppercase; }
+        .mobile-nav .social-icons { display: flex; gap: 15px; justify-content: flex-start; }
+        .mobile-nav .social-icons a { font-size: 1.2em; color: var(--text-light); transition: color 0.3s ease; text-decoration: none; }
+        .mobile-nav .social-icons a:hover { color: var(--primary-color); text-decoration: none; }
+
+        main { padding: 20px; max-width: 800px; margin: 0 auto; min-height: 60vh; }
+        .page-section { padding: 20px 0; animation: fadeIn 0.5s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card { background-color: var(--card-bg); padding: 30px 25px; border-radius: 10px; box-shadow: var(--box-shadow); margin-bottom: 30px; }
+        .card h3 { font-size: 1.5em; font-weight: 600; margin-bottom: 20px; color: var(--text-dark); }
+        .new-user { font-size: 0.9em; margin-bottom: 25px; color: var(--text-light); }
+        .new-user a { font-weight: 500; color: var(--secondary-color); }
+        
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 0.9em; font-weight: 500; margin-bottom: 8px; color: var(--text-dark); }
+        .form-group input[type="text"], .form-group input[type="email"], .form-group input[type="password"] { width: 100%; padding: 12px 15px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 1em; color: var(--text-dark); background-color: #fcfcfc; transition: border-color 0.3s ease, box-shadow 0.3s ease; -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text; user-select: text; }
+        .form-group input::placeholder { color: #aaa; }
+        .form-group input:focus { border-color: var(--secondary-color); outline: none; box-shadow: 0 0 0 3px rgba(37, 117, 252, 0.2); }
+        
+        .password-wrapper { position: relative; }
+        .password-wrapper input { padding-right: 45px; }
+        .toggle-password { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--text-light); }
+        
+        .form-options { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; font-size: 0.9em; }
+
+        .checkbox-container { display: block; position: relative; padding-left: 28px; cursor: pointer; font-size: 0.9em; user-select: none; color: var(--text-light); }
+        .checkbox-container input { position: absolute; opacity: 0; cursor: pointer; height: 0; width: 0; }
+        .checkmark { position: absolute; top: 0; left: 0; height: 20px; width: 20px; background-color: #eee; border-radius: 4px; border: 1px solid var(--border-color); }
+        .checkbox-container:hover input ~ .checkmark { background-color: #ccc; }
+        .checkbox-container input:checked ~ .checkmark { background-color: var(--primary-color); }
+        .checkbox-container .checkmark:after { content: ""; position: absolute; display: none; }
+        .checkbox-container input:checked ~ .checkmark:after { display: block; }
+        .checkbox-container .checkmark:after { left: 7px; top: 3px; width: 5px; height: 10px; border: solid white; border-width: 0 3px 3px 0; transform: rotate(45deg); }
+
+        .btn { display: inline-flex; align-items: center; justify-content: center; width: 100%; padding: 15px 25px; border: none; border-radius: 8px; background: var(--primary-gradient); color: white; font-size: 1.1em; font-weight: 600; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; text-transform: capitalize; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2); text-decoration: none; }
+        .btn:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+        .btn i { margin-left: 10px; }
+        
+        .error-message { background-color: #fcebeb; border: 1px solid #e74c3c; color: #e74c3c; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-size: 0.95em; font-weight: 500; display: none; }
+
+        .offer-card { background: linear-gradient(to bottom right, #6a11cb, #2575fc); color: white; padding: 30px; border-radius: 10px; box-shadow: var(--box-shadow); text-align: center; margin-top: 30px; font-family: 'Arial', sans-serif; }
+        .offer-card h3 { font-size: 1.6em; font-weight: 700; margin-bottom: 15px; color: white; }
+        .offer-card p { font-size: 1.1em; margin-bottom: 10px; line-height: 1.5; }
+        .offer-card p:last-child { margin-bottom: 0; font-style: italic; font-weight: 300; }
+
+        .success-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 2000; }
+        .success-modal-overlay.show { display: flex; }
+        .success-modal-content { background: #fff; width: 90%; max-width: 340px; border-radius: 10px; padding: 25px 20px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.2); animation: popUpAnim 0.3s ease; }
+        @keyframes popUpAnim { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .success-modal-icon { width: 50px; height: 50px; background: #28a745; border-radius: 50%; margin: 0 auto 15px; display: flex; justify-content: center; align-items: center; color: #fff; font-size: 1.8rem; }
+        .success-modal-title { font-size: 13px; color: #333; font-weight: 500; margin-bottom: 20px; line-height: 1.5; }
+        .success-info-container { text-align: left; margin-bottom: 20px; font-size: 13px; color: #333; }
+        .success-info-text { margin-bottom: 6px; display: flex; justify-content: flex-start; gap: 5px; }
+        .success-info-text strong { font-weight: 600; color: #000; white-space: nowrap; }
+        .success-info-text span { font-weight: 500; }
+        .login-link-btn { display: inline-block; background: #007bff; color: white; padding: 8px 20px; border-radius: 5px; font-size: 13px; font-weight: 500; text-decoration: none; transition: 0.2s; text-transform: none; }
+        .login-link-btn:hover { background: #0056b3; text-decoration: none; }
+
+        .loading-spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s ease-in-out infinite; margin-right: 10px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        footer { background-color: var(--card-bg); padding: 40px 20px 20px; border-top: 1px solid var(--border-color); margin-top: 40px; color: var(--text-light); text-align: center; font-size: 0.9em; }
+        .footer-content { display: flex; flex-wrap: wrap; justify-content: space-around; text-align: left; margin-bottom: 30px; }
+        .footer-section { flex: 1 1 200px; margin: 20px; }
+        .footer-section .footer-logo { height: 60px; width: 60px; margin-bottom: 15px; border-radius: 5px; pointer-events: none; }
+        .footer-section h4 { font-size: 1.1em; font-weight: 600; color: var(--text-dark); margin-bottom: 15px; }
+        .footer-section ul { list-style: none; }
+        .footer-section ul li { margin-bottom: 8px; }
+        .footer-section ul li a { color: var(--text-light); transition: color 0.3s ease; }
+        .footer-section ul li a:hover { color: var(--primary-color); text-decoration: none; }
+        .footer-section .social-icons { display: flex; gap: 15px; margin-top: 15px; justify-content: flex-start; }
+        .scroll-to-top { display: inline-flex; align-items: center; justify-content: center; background: var(--primary-gradient); color: white; width: 40px; height: 40px; border-radius: 50%; font-size: 1.2em; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2); position: fixed; bottom: 20px; right: 20px; z-index: 100; }
+
+        @media (max-width: 768px) {
+            header .logo span { display: block; font-size: 1em; }
+            main { padding: 15px; }
+            .form-options { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .btn { padding: 12px 20px; font-size: 1em; }
+            .footer-content { flex-direction: column; text-align: left; }
+            .footer-section { margin: 15px 0; width: 100%; text-align: left; }
+        }
+    </style>
+</head>
+<body ondragstart="return false" onselectstart="return false">
+
+    <header>
+        <div class="logo">
+            <a href="index.html">
+                <img src="https://i.ibb.co/wNjHwXKF/1000033078.png" alt="My Dream Digital Logo">
+            </a>
+            <span>Sign Up</span>
+        </div>
+        <div class="menu-toggle" id="menuToggle">
+            <i class="fas fa-bars"></i>
+        </div>
+    </header>
+
+    <nav class="mobile-nav" id="mobileNav">
+        <div class="nav-header">
+            <img src="https://i.ibb.co/wNjHwXKF/1000033078.png" alt="My Dream Digital Logo">
+            <i class="fas fa-times close-nav"></i>
+        </div>
+        <div class="contact-info">
+            <p><i class="fas fa-envelope"></i> mydreamd2424@gmail.com</p>
+            <p><i class="fas fa-phone"></i> +971561865929</p>
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="login.html">Login</a></li>
+            <li><a href="sub-admin-login.html">Sub-Admin Login</a></li>
+            <li><a href="admin-login.html">Admin Login</a></li>
+        </ul>
+        <div class="find-us">
+            <h4>FIND WITH US</h4>
+            <div class="social-icons">
+                <a href="#"><i class="fab fa-facebook-f"></i></a>
+                <a href="#"><i class="fab fa-youtube"></i></a>
+                <a href="#"><i class="fab fa-instagram"></i></a>
+                <a href="#"><i class="fab fa-telegram-plane"></i></a>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <section class="page-section">
+            <div class="breadcrumbs" style="font-size: 0.9em; color: #666; margin-bottom: 10px;"><a href="index.html" style="color:#666;">Home</a> > Enroll Member</div>
+            <h2 style="font-size: 1.8em; font-weight: 700; margin-bottom: 25px; color: #6a11cb; text-align: center;">Create Your Account!</h2>
+            <div class="card">
+                <h3>Account Information</h3>
+                <p class="new-user">Already have an account? <a href="login.html">Sign In</a></p>
+                
+                <div class="error-message" id="signup-error"></div>
+                
+                <form id="signupForm">
+                    <div class="form-group">
+                        <input type="email" id="signup-email" placeholder="Email address *" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="signup-whatsapp" placeholder="WhatsApp Number *" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="signup-fname" placeholder="First Name *" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="signup-lname" placeholder="Last Name *" required>
+                    </div>
+                    <div class="form-group">
+                        <div class="password-wrapper">
+                            <input type="password" id="signup-password" placeholder="Password (Min 6 characters) *" required>
+                            <i class="fas fa-eye toggle-password" data-target="signup-password"></i>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="signup-referral" placeholder="Referral code (Optional)">
+                    </div>
+                    <div class="form-options">
+                        <label class="checkbox-container">By clicking Create account, I agree that I have read and accepted the <a href="#">Terms of Use</a> and <a href="#">Privacy Policy</a>.
+                            <input type="checkbox" id="terms-checkbox" required>
+                            <span class="checkmark"></span>
+                        </label>
+                    </div>
+                    <button type="submit" class="btn" id="signup-btn">Sign Up <i class="fas fa-arrow-right"></i></button>
+                </form>
+            </div>
+            
+            <div class="offer-card">
+                <h3>নতুনদের জন্য বিশেষ অফার!</h3>
+                <p>আজই Sign Up করে ফ্রি আইডি খুলুন এবং পেয়ে যান 💰 ২০০ টাকা ক্যাশব্যাক!</p>
+                <p>👍 সুযোগ হাতছাড়া করবেন না – শুরু হোক আপনার জয়যাত্রা! 🚀</p>
+            </div>
+        </section>
+    </main>
+
+    <div class="success-modal-overlay" id="successModal">
+        <div class="success-modal-content">
+            <div class="success-modal-icon"> <i class="fas fa-check"></i> </div>
+            <div class="success-modal-title">Congratulations, your account has been successfully created</div>
+            <div class="success-info-container">
+                <div class="success-info-text"> <strong>Your Referral Code:</strong> <span id="modal-referral">8091861</span></div>
+                <div class="success-info-text"> <strong>Login ID:</strong> <span id="modal-login-id">01858290536</span></div>
+                <div class="success-info-text"> <strong>Password:</strong> <span id="modal-password">12345678</span></div>
+            </div>
+            <a href="login.html" class="login-link-btn">Click Here</a>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section about">
+                <img src="https://i.ibb.co/wNjHwXKF/1000033078.png" alt="My Dream Digital Logo" class="footer-logo">
+                <p>Learn how to use online social media in our society and how to earn online without wasting valuable time.</p>
+            </div>
+            <div class="footer-section links">
+                <h4>Company</h4>
+                <ul>
+                    <li><a href="#">About</a></li>
+                    <li><a href="#">FAQ</a></li>
+                    <li><a href="#">Blogs</a></li>
+                </ul>
+            </div>
+            <div class="footer-section contact-info">
+                <h4>Contact Info</h4>
+                <p>Phone: +971561865929</p>
+                <p>E-mail: mydreamd2424@gmail.com</p>
+                <div class="social-icons">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-youtube"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-telegram-plane"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <a href="#" class="scroll-to-top"><i class="fas fa-arrow-up"></i></a>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+          apiKey: "AIzaSyB8aEO4CyIP6l4kspuo_sJUMTwUzp0NvzU",
+          authDomain: "my-income-d85b2.firebaseapp.com",
+          databaseURL: "https://my-income-d85b2-default-rtdb.firebaseio.com",
+          projectId: "my-income-d85b2",
+          storageBucket: "my-income-d85b2.firebasestorage.app",
+          messagingSenderId: "731557596083",
+          appId: "1:731557596083:web:0f2c25edd8c87dfcd359c6",
+          measurementId: "G-CR12TD3VCJ"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+        document.onkeydown = function(e) {
+            if(e.keyCode == 123) return false;
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) return false;
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) return false;
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) return false;
+            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false;
+            if(e.ctrlKey && e.keyCode == 'S'.charCodeAt(0)) return false;
+            if(e.ctrlKey && e.keyCode == 'C'.charCodeAt(0)) return false;
+        }
+
+        function generateReferralCode() {
+            return Math.floor(1000000 + Math.random() * 9000000).toString();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const menuToggle = document.getElementById('menuToggle');
+            const mobileNav = document.getElementById('mobileNav');
+            const closeNav = document.querySelector('.close-nav');
+            const togglePasswordIcons = document.querySelectorAll('.toggle-password');
+            const scrollToTopBtn = document.querySelector('.scroll-to-top');
+
+            // --- URL থেকে রেফার কোড নেওয়ার জাদুকরী কোড ---
+            const urlParams = new URLSearchParams(window.location.search);
+            const refCode = urlParams.get('ref');
+            if (refCode) {
+                document.getElementById('signup-referral').value = refCode;
+            }
+            // ---------------------------------------------
+
+            if(menuToggle) menuToggle.addEventListener('click', () => mobileNav.classList.add('open'));
+            if(closeNav) closeNav.addEventListener('click', () => mobileNav.classList.remove('open'));
+
+            togglePasswordIcons.forEach(icon => {
+                icon.addEventListener('click', () => {
+                    const targetId = icon.dataset.target;
+                    const passwordInput = document.getElementById(targetId);
+                    if (passwordInput.type === 'password') {
+                        passwordInput.type = 'text';
+                        icon.classList.remove('fa-eye');
+                        icon.classList.add('fa-eye-slash');
+                    } else {
+                        passwordInput.type = 'password';
+                        icon.classList.remove('fa-eye-slash');
+                        icon.classList.add('fa-eye');
+                    }
+                });
+            });
+
+            if(scrollToTopBtn) {
+                scrollToTopBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+            }
+
+            const signupForm = document.getElementById('signupForm');
+            if(signupForm) {
+                signupForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    const email = document.getElementById('signup-email').value.trim();
+                    const whatsapp = document.getElementById('signup-whatsapp').value.trim();
+                    const firstName = document.getElementById('signup-fname').value.trim();
+                    const lastName = document.getElementById('signup-lname').value.trim();
+                    const password = document.getElementById('signup-password').value;
+                    const referralInput = document.getElementById('signup-referral').value.trim(); 
+                    const termsChecked = document.getElementById('terms-checkbox').checked;
+                    
+                    if (!email || !whatsapp || !firstName || !lastName || !password) {
+                        showError('signup-error', 'Please fill in all required fields.'); return;
+                    }
+                    if (!termsChecked) {
+                        showError('signup-error', 'Please accept the Terms of Use and Privacy Policy.'); return;
+                    }
+                    if (password.length < 6) {
+                        showError('signup-error', 'Password must be at least 6 characters long.'); return;
+                    }
+                    
+                    setButtonLoading('signup-btn', true, 'Sign Up <i class="fas fa-arrow-right"></i>');
+                    
+                    try {
+                        const emailCheck = await database.ref('users').orderByChild('email').equalTo(email).once('value');
+                        if (emailCheck.exists()) {
+                            showError('signup-error', 'This email is already registered. Please login instead.');
+                            setButtonLoading('signup-btn', false, 'Sign Up <i class="fas fa-arrow-right"></i>'); return;
+                        }
+                        
+                        const whatsappCheck = await database.ref('users').orderByChild('whatsapp').equalTo(whatsapp).once('value');
+                        if (whatsappCheck.exists()) {
+                            showError('signup-error', 'This WhatsApp number is already registered.');
+                            setButtonLoading('signup-btn', false, 'Sign Up <i class="fas fa-arrow-right"></i>'); return;
+                        }
+                        
+                        const newUserRef = database.ref('users').push();
+                        const myReferralCode = generateReferralCode(); 
+                        
+                        const userData = {
+                            email: email, whatsapp: whatsapp, firstName: firstName, lastName: lastName,
+                            password: password, referredBy: referralInput || 'None', myReferralCode: myReferralCode, 
+                            createdAt: Date.now(), status: 'active', role: 'member', balance: 0, history: [], totalRefers: 0
+                        };
+                        
+                        await newUserRef.set(userData);
+                        
+                        // --- রেফারারকে ১০০ টাকা বোনাস দেওয়ার লজিক ---
+                        if (referralInput) {
+                            const referrerQuery = await database.ref('users').orderByChild('myReferralCode').equalTo(referralInput).once('value');
+                            if (referrerQuery.exists()) {
+                                referrerQuery.forEach(async (child) => {
+                                    const referrerId = child.key;
+                                    const referrerData = child.val();
+                                    
+                                    const newRefHistory = referrerData.history ? [...referrerData.history] : [];
+                                    newRefHistory.unshift({ title: `Refer Bonus (${firstName} ${lastName})`, type: 'refer', amount: 100, date: new Date().toLocaleDateString() });
+
+                                    await database.ref('users/' + referrerId).update({
+                                        balance: (referrerData.balance || 0) + 100,
+                                        totalRefers: (referrerData.totalRefers || 0) + 1,
+                                        history: newRefHistory
+                                    });
+                                });
+                            }
+                        }
+                        // -----------------------------------------------
+
+                        document.getElementById('modal-referral').innerText = myReferralCode;
+                        document.getElementById('modal-login-id').innerText = whatsapp;
+                        document.getElementById('modal-password').innerText = password;
+                        
+                        document.getElementById('successModal').classList.add('show');
+                        document.getElementById('signupForm').reset();
+                        
+                    } catch (error) {
+                        console.error('Signup error:', error);
+                        showError('signup-error', 'Registration failed. Please try again later.');
+                    }
+                    
+                    setButtonLoading('signup-btn', false, 'Sign Up <i class="fas fa-arrow-right"></i>');
+                });
+            }
+        });
+
+        function showError(elementId, message) {
+            const errorEl = document.getElementById(elementId);
+            if (errorEl) { errorEl.textContent = message; errorEl.style.display = 'block'; setTimeout(() => { errorEl.style.display = 'none'; }, 5000); }
+        }
+
+        function setButtonLoading(buttonId, isLoading, originalText) {
+            const btn = document.getElementById(buttonId);
+            if (btn) {
+                if (isLoading) { btn.disabled = true; btn.innerHTML = '<span class="loading-spinner"></span> Please wait...'; }
+                else { btn.disabled = false; btn.innerHTML = originalText; }
+            }
+        }
+    </script>
+</body>
+</html>
