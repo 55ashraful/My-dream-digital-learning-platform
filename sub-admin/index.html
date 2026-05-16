@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sub-Admin Dashboard - My Dream Digital</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- Firebase Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+    <style>
+        :root {
+            --primary: #6a11cb;
+            --secondary: #2575fc;
+            --primary-light: #f0ebff;
+            --text-dark: #2c3e50;
+            --text-muted: #7f8d8d;
+            --bg-light: #f4f6f9;
+            --card-bg: #ffffff;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.03);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Hind Siliguri', sans-serif; background: var(--bg-light); color: var(--text-dark); min-height: 100vh; display: flex; }
+
+        /* কপিরাইট প্রটেকশন (CSS) */
+        body { -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
+        input, textarea { -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text; user-select: text; }
+
+        .sidebar {
+            width: 280px; background: var(--card-bg); border-right: 1px solid var(--border-color);
+            padding: 20px 0; display: flex; flex-direction: column; position: fixed; height: 100vh;
+            left: 0; top: 0; z-index: 50; transition: transform 0.3s ease;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+        }
+        .sidebar.closed { transform: translateX(-100%); }
+        .sidebar-header { padding: 0 20px 20px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 12px; }
+        .sidebar-avatar {
+            width: 45px; height: 45px; border-radius: 50%; background: linear-gradient(135deg, #007bff, #00bfff);
+            display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1.2rem;
+        }
+        .nav-menu { padding: 15px 10px; flex: 1; overflow-y: auto; }
+        .nav-item {
+            display: flex; align-items: center; gap: 12px; padding: 12px 15px;
+            color: var(--text-muted); border-radius: 8px; cursor: pointer; transition: 0.2s; margin-bottom: 5px; font-weight: 500; font-size: 0.95rem;
+        }
+        .nav-item:hover, .nav-item.active { background: #e8f4fd; color: var(--secondary); }
+        .nav-item i { width: 20px; text-align: center; }
+        .nav-item.danger { color: #e74c3c; }
+        .nav-item.danger:hover { background: #fce4e4; }
+
+        .main-content { flex: 1; margin-left: 280px; padding: 20px; transition: margin-left 0.3s ease; }
+        .main-content.expanded { margin-left: 0; }
+        .top-bar {
+            background: var(--card-bg); padding: 15px 20px; border-radius: 12px;
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; box-shadow: var(--shadow-sm);
+        }
+        .toggle-btn { display: none; background: white; border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 8px; cursor: pointer; color: var(--text-dark); }
+        
+        .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 25px; margin-bottom: 20px; box-shadow: var(--shadow-sm); }
+        .stat-card {
+            background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; text-align: center;
+            box-shadow: var(--shadow-sm); transition: transform 0.2s;
+        }
+        .stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+        
+        .input-field { width: 100%; padding: 12px 16px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 1rem; color: var(--text-dark); background: white; transition: 0.2s; }
+        .input-field:focus { outline: none; border-color: var(--secondary); box-shadow: 0 0 0 3px rgba(37, 117, 252, 0.15); }
+        .btn-primary { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; font-weight: 600; padding: 12px 24px; border-radius: 8px; border: none; cursor: pointer; transition: 0.2s; width: 100%; font-size: 1rem; }
+        .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+        .hidden { display: none !important; }
+        .section { display: none; animation: fadeIn 0.3s ease-out; }
+        .section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); position: fixed; }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+            .toggle-btn { display: block; }
+        }
+    </style>
+</head>
+<!-- রাইট ক্লিক বন্ধ -->
+<body oncontextmenu="return false;">
+
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-avatar"><span id="subAdminInitial">S</span></div>
+            <div>
+                <h4 style="font-size: 1.1rem; color: #007bff;" id="subAdminName">Sub-Admin</h4>
+                <p style="font-size: 0.8rem; color: var(--text-muted);" id="subAdminRoleText">Role: Loading...</p>
+            </div>
+        </div>
+        <nav class="nav-menu" id="dynamicNavMenu">
+            <!-- ডায়নামিক মেনু এখানে লোড হবে -->
+        </nav>
+        <div style="padding: 10px;">
+            <div class="nav-item danger" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</div>
+        </div>
+    </aside>
+
+    <main class="main-content" id="mainContent">
+        <div class="top-bar">
+            <div class="flex items-center gap-3">
+                <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
+                <h3 style="font-weight:600;">Welcome, <span style="color: #007bff;" id="welcomeName">Sub-Admin</span></h3>
+            </div>
+            <span style="font-size: 0.9rem; color: var(--text-muted);" id="headerRole">Role</span>
+        </div>
+
+        <div class="container">
+            <!-- ডায়নামিক হোম সেকশন -->
+            <div id="homeSection" class="section active">
+                <h2 style="font-size: 1.8rem; margin-bottom: 20px; color: var(--text-dark);" id="dashboardTitle">Dashboard Overview</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6" id="statsContainer">
+                    <!-- ডায়নামিক স্ট্যাটস এখানে লোড হবে -->
+                </div>
+            </div>
+
+            <!-- ডায়নামিক কাজের সেকশন -->
+            <div id="workSection" class="section">
+                <div class="card">
+                    <h3 style="margin-bottom: 20px; color: var(--primary);" id="workSectionTitle">Work Area</h3>
+                    <p style="margin-bottom: 15px; color: var(--text-muted); font-size: 0.9rem;" id="workSectionDesc">Manage your tasks here.</p>
+                    
+                    <div style="border: 2px dashed var(--border-color); border-radius: 8px; padding: 20px; text-align: center; background: var(--bg-light);">
+                        <i class="fas fa-cloud-upload-alt" style="font-size: 2.5rem; color: var(--primary); margin-bottom: 10px;"></i>
+                        <h4 style="font-size: 1.1rem;">Upload Proof / Data</h4>
+                        <p style="font-size: 0.85rem; color: var(--text-muted);">PNG, JPG or JPEG (Max 5MB)</p>
+                        <input type="file" id="workProof" accept="image/*" class="input-field" style="margin-top: 10px;">
+                        <button class="btn-primary" style="margin-top: 15px;" onclick="submitWork()">Submit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="toast" style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #2d3748; color: white; padding: 12px 25px; border-radius: 8px; font-size: 0.9rem; font-weight: 500; box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 1000; display: none; transition: 0.3s;"></div>
+
+    <script>
+        // ===== কপিরাইট প্রটেকশন (JavaScript) =====
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('selectstart', e => { if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return; e.preventDefault(); });
+        document.addEventListener('copy', e => e.preventDefault());
+        document.addEventListener('cut', e => e.preventDefault());
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'F12') { e.preventDefault(); return false; }
+            if (e.ctrlKey && (e.key === 'u' || e.key === 's')) { e.preventDefault(); return false; }
+            if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) { e.preventDefault(); return false; }
+        });
+
+        // Firebase Config
+        const firebaseConfig = {
+          apiKey: "AIzaSyB8aEO4CyIP6l4kspuo_sJUMTwUzp0NvzU",
+          authDomain: "my-income-d85b2.firebaseapp.com",
+          databaseURL: "https://my-income-d85b2-default-rtdb.firebaseio.com",
+          projectId: "my-income-d85b2",
+          storageBucket: "my-income-d85b2.firebasestorage.app",
+          messagingSenderId: "731557596083",
+          appId: "1:731557596083:web:0f2c25edd8c87dfcd359c6"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        
+        let currentSubAdminId = localStorage.getItem('userId');
+        let currentRole = localStorage.getItem('userSubRole'); // এখান থেকে রোল বোঝা যাবে
+
+        if (!currentSubAdminId || localStorage.getItem('userRole') !== 'subadmin') {
+            window.location.href = '../sub-admin-login.html';
+        }
+
+        // ১৮টি রোলের ডায়নামিক ডেটা কনফিগারেশন
+        const roleConfigs = {
+            "Counselor": {
+                icon: "fa-headset", stats: [{title: "Total Leads", val: 0, color: "#6a11cb"}, {title: "Converted", val: 0, color: "#27ae60"}, {title: "Pending Follow-ups", val: 0, color: "#f39c12"}],
+                menus: [{id: "home", icon: "fa-home", text: "Dashboard"}, {id: "work", icon: "fa-phone", text: "Follow-up List"}],
+                workTitle: "Update Follow-up", workDesc: "Submit call recording or follow-up status."
+            },
+            "Senior Team Leader": {
+                icon: "fa-chess-king", stats: [{title: "Team Members", val: 0, color: "#6a11cb"}, {title: "Team Target", val: 0, color: "#2575fc"}, {title: "Achieved", val: 0, color: "#27ae60"}],
+                menus: [{id: "home", icon: "fa-home", text: "Dashboard"}, {id: "work", icon: "fa-users", text: "Manage Team"}],
+                workTitle: "Team Report", workDesc: "Submit daily team performance report."
+            },
+            "Team Leader": {
+                icon: "fa-user-tie", stats: [{title: "Members", val: 0, color: "#6a11cb"}, {title: "Tasks Given", val: 0, color: "#2575fc"}, {title: "Tasks Done", val: 0, color: "#27ae60"}],
+                menus: [{id: "home", icon: "fa-home", text: "Dashboard"}, {id: "work", icon: "fa-tasks", text: "Assign Tasks"}],
+                workTitle: "Task Assignment", workDesc: "Upload task distribution sheet."
+            },
+            "Trainer": {
+                icon: "fa-chalkboard-teacher", stats: [{title: "Batches", val: 0, color: "#6a11cb"}, {title: "Trainees", val: 0, color: "#2575fc"}, {title: "Sessions Taken", val: 0, color: "#27ae60"}],
+                menus: [{id: "home", icon: "fa-home", text: "Dashboard"}, {id: "work", icon: "fa-book", text: "Training Materials"}],
+                workTitle: "Session Proof", workDesc: "Upload today's training screenshot/attendance."
+            },
+            "Teacher": {
+                icon: "fa-graduation-cap", stats: [{title: "Students", val: 0, color: "#6a11cb"}, {title: "Classes Today", val: 0, color: "#2575fc"}, {title: "Courses", val: 0, color: "#27ae60"}],
+                menus: [{id: "home", icon: "fa-home", text: "Dashboard"}, {id: "work", icon: "fa-video", text: "Upload Class Link"}],
+                workTitle: "Class Proof", workDesc: "Submit class link or attendance sheet."
+            },
+            "Account Manager": {
+                icon: "fa-calculator", stats: [{title: "Revenue", val: 0, color: "#6a11cb"}, {title: "Pending", val: 0, color: "#f39c12"}, {title: "Expenses", val: 0, color: "#e74c3c"}],
+                menus: [{id: "home", icon: "fa-home", text: "Dashboard"}, {id: "work", icon: "fa-file-invoice-dollar", text: "Manage Accounts"}],
+                workTitle: "Transaction Update", workDesc: "Upload daily transaction sheet."
+            },
+            "Photo editing teacher": {
+                icon: "fa-image", stats: [{title: "Students", val: 0, color: "#6a11cb"}, {title: "Projects", val: 0, color: "#2575fc"}, {title: "Tutorials", val: 0, color: "#27ae60"}],
+                menus: [{id: "home", icon: "fa-home", text: "Dashboard"}, {id: "work", icon: "fa-paint-brush", text: "Review Projects"}],
+                workTitle: "Project Review", workDesc: "Upload checked project files."
+            },
+            "Video editing teacher": {
+                icon: "fa-film", stats: [{title: "Students", val: 0, color: "#6a11cb"}, {title: "Projects", val: 0, color: "#2575fc"}, {title: "Tutorials", val: 0, color: "#27ae60"}],
+                menus: [{id: "home", icon: "fa-home", text: "Dashboard"}, {id: "work", icon: "fa-cut", text: "Review Edits"}],
+                workTitle: "Edit Review", workDesc: "Upload checked video projects."
+            },
+            "Senior counselor": {
+                icon: "fa-headset", stats: [{title: "Total Leads", val: 0, color: "#6a11cb"}, {title: "Converted", val: 0, color: "#27ae60"}, {title: "Junior Counselors", val: 0, color: "#2575fc"}],
+                menus: [{id: "home", icon: "fa-home", text: "Dashboard"}, {id: "work", icon: "fa-phone", text: "Supervise Calls"}],
+                workTitle: "Supervision Report", workDesc: "Submit call quality report."
+            },
+            "Helpline": {
+                icon: "fa-life-ring", stats: [{title: "Open Tickets", val: 0, color: "#e74c3c"}, {title: "Resolved", val: 0, color: "#27ae60"}, {title: "Avg Time", val: 0, color: "#2575fc"}],
+                menus: [{id: "home", icon: "fa-home", text: "Dashboard"}, {id: "work", icon: "fa-ticket-alt", text: "Ticket System"}],
+                workTitle: "Ticket Resolve", workDesc: "Upload resolved ticket proof."
+            },
+            "Web developer": {
+                icon: "fa-code", stats: [{title: "Active Projects", val: 0, color: "#6a11cb"}, {title: "Bugs Fixed", val: 0, color: "#27ae60"}, {title: "Clients", val: 0, color: "#2575fc"}],
+                menus: [{id: "home", icon: "fa-home", text: "Dashboard"}, {id: "work", icon: "fa-laptop-code", text: "Update Project"}],
+                workTitle: "Project Update", workDesc: "Upload work progress screenshot."
+            },
+            "Marketing team": {
+                icon: "fa-bullhorn", stats: [{title: "Campaigns", val: 0, color: "#6a11cb"}, {title: "Leads Gen.", val: 0, color: "#27ae60"}, {title: "Ad Spend", val: 0, color: "#f39c12"}],
+                menus: [{id: "home", icon: "fa-home", text: "Dashboard"}, {id: "work", icon: "fa-ad", text: "Campaign Stats"}],
+                workTitle: "Campaign Report", workDesc: "Submit ad performance screenshot."
+            },
+            "Qualification team": {
+                icon: "fa-clipboard-check", stats: [{title: "Applications", val: 0, color: "#6a11cb"}, {title: "Approved", val: 0, color: "#27ae60"}, {title: "Rejected", val: 0, color: "#e74c3c"}],
+                menus: [{id: "home", icon: "fa-home", text: "Dashboard"}, {id: "work", icon: "fa-check-circle", text: "Verify Applications"}],
+                workTitle: "Verification Proof", workDesc: "Upload verified document status."
+            },
+            "Senior teacher": {
+                icon: "fa-user-graduate", stats: [{title: "Classes Taken", val: 0, color: "#6a11cb"}, {title: "Students", val: 0, color: "#2575fc"}, {title: "Feedbacks", val: 0, color: "#27ae60"}],
+                menus: [{id: "home", icon: "fa-home", text: "Dashboard"}, {id: "work", icon: "fa-chalkboard", text: "Class Routine"}],
+                workTitle: "Class Report", workDesc: "Submit class completion proof."
+            },
+            "Senior Manager": {
+                icon: "fa-user-shield", stats: [{title: "Departments", val: 0, color: "#6a11cb"}, {title: "Employees", val: 0, color: "#2575fc"}, {title: "Revenue", val: 0, color: "#27ae60"}],
+                menus: [{id: "home", icon: "fa-home", text: "Dashboard"}, {id: "work", icon: "fa-chart-line", text: "Overall Report"}],
+                workTitle: "Management Report", workDesc: "Upload overall progress report."
+            },
+            "Counsellor Manager": {
+                icon: "fa-users-cog", stats: [{title: "Total Counselors", val: 0, color: "#6a11cb"}, {title: "Total Conversions", val: 0, color: "#27ae60"}, {title: "Pending", val: 0, color: "#f39c12"}],
+                menus: [{id: "home", icon: "fa-home", text: "Dashboard"}, {id: "work", icon: "fa-list-alt", text: "Monitor Counselors"}],
+                workTitle: "Monitoring Report", workDesc: "Submit counselor performance sheet."
+            },
+            "Marketing Manager": {
+                icon: "fa-chart-pie", stats: [{title: "Total Leads", val: 0, color: "#6a11cb"}, {title: "Conversion Rate", val: 0, color: "#27ae60"}, {title: "Budget", val: 0, color: "#f39c12"}],
+                menus: [{id: "home", icon: "fa-home", text: "Dashboard"}, {id: "work", icon: "fa-bullseye", text: "Strategy Update"}],
+                workTitle: "Strategy Report", workDesc: "Upload marketing strategy update."
+            },
+            "Accounte": {
+                icon: "fa-money-bill-wave", stats: [{title: "Income", val: 0, color: "#27ae60"}, {title: "Expense", val: 0, color: "#e74c3c"}, {title: "Balance", val: 0, color: "#6a11cb"}],
+                menus: [{id: "home", icon: "fa-home", text: "Dashboard"}, {id: "work", icon: "fa-receipt", text: "Voucher Entry"}],
+                workTitle: "Voucher Submission", workDesc: "Upload daily voucher/bill copy."
+            }
+        };
+
+        // ডোম লোড হলে ডায়নামিক ডেটা বসানো
+        document.addEventListener('DOMContentLoaded', () => {
+            database.ref('subAdmins/' + currentSubAdminId).once('value').then((snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    const role = data.role || currentRole;
+                    const name = data.name || data.email || "Sub-Admin";
+                    
+                    // UI আপডেট
+                    document.getElementById('welcomeName').innerText = name;
+                    document.getElementById('subAdminName').innerText = name;
+                    document.getElementById('subAdminInitial').innerText = name.charAt(0).toUpperCase();
+                    document.getElementById('subAdminRoleText').innerText = role;
+                    document.getElementById('headerRole').innerText = role;
+
+                    // রোল অনুযায়ী ড্যাশবোর্ড সেটআপ
+                    setupRoleDashboard(role);
+                } else {
+                    logout();
+                }
+            });
+        });
+
+        function setupRoleDashboard(role) {
+            const config = roleConfigs[role] || roleConfigs["Counselor"]; // ডিফল্ট ফলব্যাক
+
+            // ১. ড্যাশবোর্ড টাইটেল আপডেট
+            document.getElementById('dashboardTitle').innerText = `${role} Dashboard`;
+
+            // ২. স্ট্যাটস কার্ড তৈরি
+            const statsContainer = document.getElementById('statsContainer');
+            statsContainer.innerHTML = '';
+            config.stats.forEach(stat => {
+                statsContainer.innerHTML += `
+                    <div class="stat-card">
+                        <h4 style="font-size: 2rem; color: ${stat.color};">${stat.val}</h4>
+                        <p style="font-size: 0.9rem; color: var(--text-muted);">${stat.title}</p>
+                    </div>
+                `;
+            });
+
+            // ৩. সাইডবার মেনু তৈরি
+            const navMenu = document.getElementById('dynamicNavMenu');
+            navMenu.innerHTML = '';
+            config.menus.forEach((menu, index) => {
+                const activeClass = index === 0 ? 'active' : '';
+                navMenu.innerHTML += `
+                    <div class="nav-item ${activeClass}" onclick="showSection('${menu.id}', this)">
+                        <i class="fas ${menu.icon}"></i> ${menu.text}
+                    </div>
+                `;
+            });
+
+            // ৪. কাজের সেকশন আপডেট
+            document.getElementById('workSectionTitle').innerText = config.workTitle;
+            document.getElementById('workSectionDesc').innerText = config.workDesc;
+        }
+
+        function showSection(sectionId, element) {
+            document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+            document.getElementById(sectionId + 'Section').classList.add('active');
+            
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            if(element) element.classList.add('active');
+
+            if (window.innerWidth < 768) {
+                document.getElementById('sidebar').classList.add('closed');
+                document.getElementById('mainContent').classList.add('expanded');
+            }
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('closed');
+            document.getElementById('mainContent').classList.toggle('expanded');
+        }
+
+        function submitWork() {
+            const fileInput = document.getElementById('workProof');
+            if (!fileInput.files || !fileInput.files[0]) {
+                showToast("Please select a file first!", "error"); return;
+            }
+            showToast("Work submitted successfully!");
+            fileInput.value = ""; 
+        }
+
+        function showToast(message, type = "success") {
+            const toast = document.getElementById('toast');
+            toast.innerText = message;
+            toast.style.background = type === "success" ? "#27ae60" : "#e74c3c";
+            toast.style.display = "block";
+            setTimeout(() => { toast.style.display = "none"; }, 3000);
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = '../sub-admin-login.html';
+        }
+    </script>
+</body>
+</html>
