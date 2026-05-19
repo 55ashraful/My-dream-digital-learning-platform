@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sub-Admin Login - My Dream Digital</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(to right, #6a11cb, #2575fc);
+            --primary-color: #6a11cb;
+            --secondary-color: #2575fc;
+            --text-dark: #333;
+            --text-light: #666;
+            --bg-light: #f7f7f7;
+            --card-bg: #fff;
+            --border-color: #eee;
+            --box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Poppins', sans-serif; background-color: var(--bg-light); color: var(--text-dark); line-height: 1.6; }
+        a { color: var(--secondary-color); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        body {
+            -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;
+        }
+        input, textarea {
+            -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text; user-select: text;
+        }
+
+        header { background-color: var(--card-bg); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--box-shadow); position: sticky; top: 0; z-index: 1000; }
+        header .logo { display: flex; align-items: center; gap: 10px; }
+        header .logo img { height: 40px; width: 40px; border-radius: 5px; }
+        header .logo span { font-weight: 600; font-size: 1.1em; color: var(--text-dark); }
+        .menu-toggle { font-size: 1.5em; cursor: pointer; color: var(--text-dark); }
+
+        .mobile-nav { position: fixed; top: 0; right: -100%; width: 80%; max-width: 300px; height: 100%; background-color: var(--card-bg); box-shadow: -4px 0 15px rgba(0, 0, 0, 0.1); transition: right 0.3s ease-in-out; z-index: 1001; display: flex; flex-direction: column; padding: 20px; color: var(--text-dark); overflow-y: auto; }
+        .mobile-nav.open { right: 0; }
+        .mobile-nav .nav-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border-color); }
+        .mobile-nav .nav-header img { height: 40px; width: 40px; border-radius: 5px; }
+        .mobile-nav .close-nav { font-size: 1.5em; cursor: pointer; }
+        .mobile-nav .contact-info { margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color); }
+        .mobile-nav .contact-info p { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 0.9em; color: var(--text-light); }
+        .mobile-nav .contact-info p i { color: var(--primary-color); }
+        .mobile-nav .nav-links { list-style: none; flex-grow: 1; }
+        .mobile-nav .nav-links li { margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--border-color); }
+        .mobile-nav .nav-links li:last-child { border-bottom: none; }
+        .mobile-nav .nav-links a { font-weight: 500; color: var(--text-dark); display: block; padding: 5px 0; }
+        .mobile-nav .nav-links a:hover { color: var(--primary-color); text-decoration: none; }
+        .mobile-nav .find-us { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color); }
+        .mobile-nav .find-us h4 { font-size: 0.9em; color: var(--text-light); margin-bottom: 15px; text-transform: uppercase; }
+        .mobile-nav .social-icons { display: flex; gap: 15px; justify-content: flex-start; }
+        .mobile-nav .social-icons a { font-size: 1.2em; color: var(--text-light); transition: color 0.3s ease; text-decoration: none; }
+        .mobile-nav .social-icons a:hover { color: var(--primary-color); text-decoration: none; }
+
+        main { padding: 20px; max-width: 800px; margin: 0 auto; min-height: 60vh; }
+        .page-section { padding: 20px 0; animation: fadeIn 0.5s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .breadcrumbs { font-size: 0.9em; color: var(--text-light); margin-bottom: 10px; }
+        .breadcrumbs a { color: var(--text-light); }
+        .breadcrumbs a:hover { color: var(--primary-color); }
+        h2 { font-size: 1.8em; font-weight: 700; margin-bottom: 25px; color: var(--primary-color); text-align: center; }
+
+        .card { background-color: var(--card-bg); padding: 30px 25px; border-radius: 10px; box-shadow: var(--box-shadow); margin-bottom: 30px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 0.9em; font-weight: 500; margin-bottom: 8px; color: var(--text-dark); }
+        
+        .form-group input[type="text"], 
+        .form-group input[type="email"], 
+        .form-group input[type="password"],
+        .form-group select { 
+            width: 100%; padding: 12px 15px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 1em; color: var(--text-dark); background-color: #fcfcfc; transition: border-color 0.3s ease, box-shadow 0.3s ease; 
+        }
+        
+        .form-group select {
+            appearance: none; -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 15px center; background-size: 16px; cursor: pointer;
+        }
+
+        .form-group input::placeholder { color: #aaa; }
+        .form-group input:focus, .form-group select:focus { border-color: var(--secondary-color); outline: none; box-shadow: 0 0 0 3px rgba(37, 117, 252, 0.2); }
+        
+        .password-wrapper { position: relative; }
+        .password-wrapper input { padding-right: 45px; }
+        .toggle-password { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--text-light); }
+        
+        .btn { display: inline-flex; align-items: center; justify-content: center; width: 100%; padding: 15px 25px; border: none; border-radius: 8px; background: var(--primary-gradient); color: white; font-size: 1.1em; font-weight: 600; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; text-transform: capitalize; margin-top: 15px; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2); text-decoration: none; }
+        .btn:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+        .btn i { margin-left: 10px; }
+        
+        .error-message { background-color: #fcebeb; border: 1px solid #e74c3c; color: #e74c3c; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-size: 0.95em; font-weight: 500; display: none; }
+        .success-message { background-color: #e8f8f0; border: 1px solid #27ae60; color: #27ae60; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-size: 0.95em; font-weight: 500; display: none; }
+
+        .loading-spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s ease-in-out infinite; margin-right: 10px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        footer { background-color: var(--card-bg); padding: 40px 20px 20px; border-top: 1px solid var(--border-color); margin-top: 40px; color: var(--text-light); text-align: center; font-size: 0.9em; }
+        .footer-content { display: flex; flex-wrap: wrap; justify-content: space-around; text-align: left; margin-bottom: 30px; }
+        .footer-section { flex: 1 1 200px; margin: 20px; }
+        .footer-section .footer-logo { height: 60px; width: 60px; margin-bottom: 15px; border-radius: 5px; }
+        .footer-section h4 { font-size: 1.1em; font-weight: 600; color: var(--text-dark); margin-bottom: 15px; }
+        .footer-section ul { list-style: none; }
+        .footer-section ul li { margin-bottom: 8px; }
+        .footer-section ul li a { color: var(--text-light); transition: color 0.3s ease; }
+        .footer-section ul li a:hover { color: var(--primary-color); text-decoration: none; }
+        .footer-section .social-icons { display: flex; gap: 15px; margin-top: 15px; justify-content: flex-start; }
+        .scroll-to-top { display: inline-flex; align-items: center; justify-content: center; background: var(--primary-gradient); color: white; width: 40px; height: 40px; border-radius: 50%; font-size: 1.2em; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2); position: fixed; bottom: 20px; right: 20px; z-index: 100; }
+
+        @media (max-width: 768px) {
+            header .logo span { display: block; font-size: 1em; }
+            main { padding: 15px; }
+            .btn { padding: 12px 20px; font-size: 1em; }
+            .footer-content { flex-direction: column; text-align: left; }
+            .footer-section { margin: 15px 0; width: 100%; text-align: left; }
+        }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <header>
+        <div class="logo">
+            <a href="index.html">
+                <img src="https://i.ibb.co/wNjHwXKF/1000033078.png" alt="My Dream Digital Logo">
+            </a>
+            <span>Sub-Admin Panel</span>
+        </div>
+        <div class="menu-toggle" id="menuToggle">
+            <i class="fas fa-bars"></i>
+        </div>
+    </header>
+
+    <nav class="mobile-nav" id="mobileNav">
+        <div class="nav-header">
+            <img src="https://i.ibb.co/wNjHwXKF/1000033078.png" alt="My Dream Digital Logo">
+            <i class="fas fa-times close-nav"></i>
+        </div>
+        <div class="contact-info">
+            <p><i class="fas fa-envelope"></i> mydreamd2424@gmail.com</p>
+            <p><i class="fas fa-phone"></i> +971561865929</p>
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="login.html">Student Login</a></li>
+            <li><a href="admin-login.html">Admin Login</a></li>
+            <li><a href="signup.html">SignUp</a></li>
+        </ul>
+        <div class="find-us">
+            <h4>FIND WITH US</h4>
+            <div class="social-icons">
+                <a href="#"><i class="fab fa-facebook-f"></i></a>
+                <a href="#"><i class="fab fa-youtube"></i></a>
+                <a href="#"><i class="fab fa-instagram"></i></a>
+                <a href="#"><i class="fab fa-linkedin-in"></i></a>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <section class="page-section">
+            <div class="breadcrumbs"><a href="index.html">Home</a> > Sub-Admin Login</div>
+            <h2>SUB ADMIN LOGIN</h2>
+            <div class="card">
+                
+                <div class="error-message" id="subadmin-error"></div>
+                <div class="success-message" id="subadmin-success"></div>
+
+                <form id="subAdminLoginForm">
+                    <div class="form-group">
+                        <label for="sub-admin-account-type">Account Type</label>
+                        <select id="sub-admin-account-type" required>
+                            <option value="" disabled selected>Select your role</option>
+                            <option value="Counselor">Counselor</option>
+                            <option value="Senior Team Leader">Senior Team Leader</option>
+                            <option value="Team Leader">Team Leader</option>
+                            <option value="Trainer">Trainer</option>
+                            <option value="Teacher">Teacher</option>
+                            <option value="Account Manager">Account Manager</option>
+                            <option value="Photo editing teacher">Photo editing teacher</option>
+                            <option value="Video editing teacher">Video editing teacher</option>
+                            <option value="Senior counselor">Senior counselor</option>
+                            <option value="Helpline">Helpline</option>
+                            <option value="Web developer">Web developer</option>
+                            <option value="Marketing team">Marketing team</option>
+                            <option value="Qualification team">Qualification team</option>
+                            <option value="Senior teacher">Senior teacher</option>
+                            <option value="Senior Manager">Senior Manager</option>
+                            <option value="Counsellor Manager">Counsellor Manager</option>
+                            <option value="Marketing Manager">Marketing Manager</option>
+                            <option value="Accounte">Accounte</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="sub-admin-email" placeholder="SubAdmin E-mail or Whatsapp *" required>
+                    </div>
+                    <div class="form-group">
+                        <div class="password-wrapper">
+                            <input type="password" id="sub-admin-password" placeholder="Password *" required>
+                            <i class="fas fa-eye toggle-password" data-target="sub-admin-password"></i>
+                        </div>
+                    </div>
+                    <a href="#" style="font-size: 0.9em; display: inline-block; margin-bottom: 10px; color: var(--secondary-color);">Forgot Password?</a>
+                    <button type="submit" class="btn" id="subadmin-login-btn">Sign In <i class="fas fa-arrow-right"></i></button>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section about">
+                <img src="https://i.ibb.co/wNjHwXKF/1000033078.png" alt="My Dream Digital Logo" class="footer-logo">
+                <p>Learn how to use online social media in our society and how to earn online without wasting valuable time.</p>
+            </div>
+            <div class="footer-section links">
+                <h4>Company</h4>
+                <ul>
+                    <li><a href="#">About</a></li>
+                    <li><a href="#">FAQ</a></li>
+                    <li><a href="#">Blogs</a></li>
+                </ul>
+            </div>
+            <div class="footer-section contact-info">
+                <h4>Contact Info</h4>
+                <p>Phone: +971561865929</p>
+                <p>E-mail: mydreamd2424@gmail.com</p>
+                <div class="social-icons">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-youtube"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-telegram-plane"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <a href="#" class="scroll-to-top"><i class="fas fa-arrow-up"></i></a>
+
+    <!-- Firebase Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+    <script>
+        document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+        document.addEventListener('selectstart', function(e) {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            e.preventDefault();
+        });
+        document.addEventListener('copy', function(e) { e.preventDefault(); });
+        document.addEventListener('cut', function(e) { e.preventDefault(); });
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'F12') { e.preventDefault(); return false; }
+            if (e.ctrlKey && (e.key === 'u' || e.key === 's')) { e.preventDefault(); return false; }
+            if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) { e.preventDefault(); return false; }
+        });
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyB8aEO4CyIP6l4kspuo_sJUMTwUzp0NvzU",
+          authDomain: "my-income-d85b2.firebaseapp.com",
+          databaseURL: "https://my-income-d85b2-default-rtdb.firebaseio.com",
+          projectId: "my-income-d85b2",
+          storageBucket: "my-income-d85b2.firebasestorage.app",
+          messagingSenderId: "731557596083",
+          appId: "1:731557596083:web:0f2c25edd8c87dfcd359c6",
+          measurementId: "G-CR12TD3VCJ"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const menuToggle = document.getElementById('menuToggle');
+            const mobileNav = document.getElementById('mobileNav');
+            const closeNav = document.querySelector('.close-nav');
+            const togglePasswordIcons = document.querySelectorAll('.toggle-password');
+            const scrollToTopBtn = document.querySelector('.scroll-to-top');
+
+            if(menuToggle) menuToggle.addEventListener('click', () => mobileNav.classList.add('open'));
+            if(closeNav) closeNav.addEventListener('click', () => mobileNav.classList.remove('open'));
+
+            togglePasswordIcons.forEach(icon => {
+                icon.addEventListener('click', () => {
+                    const targetId = icon.dataset.target;
+                    const passwordInput = document.getElementById(targetId);
+                    if (passwordInput.type === 'password') {
+                        passwordInput.type = 'text';
+                        icon.classList.remove('fa-eye');
+                        icon.classList.add('fa-eye-slash');
+                    } else {
+                        passwordInput.type = 'password';
+                        icon.classList.remove('fa-eye-slash');
+                        icon.classList.add('fa-eye');
+                    }
+                });
+            });
+
+            if(scrollToTopBtn) {
+                scrollToTopBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+            }
+
+            // সাব-এডমিন লগইন ফর্ম লজিক
+            const subAdminLoginForm = document.getElementById('subAdminLoginForm');
+            if(subAdminLoginForm) {
+                subAdminLoginForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    // ইউজারের ইনপুট থেকে স্পেস কাটা হচ্ছে
+                    const accountType = document.getElementById('sub-admin-account-type').value.trim();
+                    const email = document.getElementById('sub-admin-email').value.trim();
+                    const password = document.getElementById('sub-admin-password').value.trim();
+                    
+                    if (!accountType || !email || !password) {
+                        showError('subadmin-error', 'Please fill in all fields.');
+                        return;
+                    }
+                    
+                    setButtonLoading('subadmin-login-btn', true, 'Sign In <i class="fas fa-arrow-right"></i>');
+                    
+                    try {
+                        // ডাটাবেজের subadmins নোডে ছোট হাতের email দিয়ে খুঁজছি
+                        const snapshot = await database.ref('subadmins').orderByChild('email').equalTo(email).once('value');
+                        
+                        if (snapshot.exists()) {
+                            let foundUser = null;
+                            let userId = null;
+                            
+                            snapshot.forEach(child => {
+                                const data = child.val();
+                                
+                                // ডাটাবেজ থেকে আসা ডাটার স্পেস কাটা হচ্ছে (যাতে ম্যাচিং এ সমস্যা না হয়)
+                                const dbRole = data.role ? String(data.role).trim() : "";
+                                const dbPass = data.password ? String(data.password).trim() : "";
+                                
+                                // ছোট হাতের password এবং role চেক করা হচ্ছে
+                                if (dbPass === password && dbRole === accountType) {
+                                    foundUser = data;
+                                    userId = child.key;
+                                }
+                            });
+                            
+                            if (foundUser) {
+                                localStorage.setItem('isLoggedIn', 'true');
+                                localStorage.setItem('userId', userId);
+                                localStorage.setItem('userRole', 'subadmin');
+                                localStorage.setItem('userSubRole', accountType);
+                                localStorage.setItem('subadminEmail', foundUser.email);
+                                
+                                showSuccess('subadmin-success', 'Login successful! Welcome ' + accountType);
+                                
+                                // সাব-এডমিন ড্যাশবোর্ডে নিয়ে যাচ্ছে
+                                setTimeout(() => {
+                                    window.location.href = 'sub-admin/index.html';
+                                }, 1500);
+                            } else {
+                                showError('subadmin-error', 'Invalid credentials or role mismatch.');
+                            }
+                        } else {
+                            showError('subadmin-error', 'Sub-Admin account not found.');
+                        }
+                    } catch (error) {
+                        console.error('Sub-Admin login error:', error);
+                        showError('subadmin-error', 'Login failed: ' + error.message);
+                    }
+                    
+                    setButtonLoading('subadmin-login-btn', false, 'Sign In <i class="fas fa-arrow-right"></i>');
+                });
+            }
+        });
+
+        function showError(elementId, message) {
+            const errorEl = document.getElementById(elementId);
+            if (errorEl) {
+                errorEl.textContent = message;
+                errorEl.style.display = 'block';
+                setTimeout(() => { errorEl.style.display = 'none'; }, 5000);
+            }
+        }
+
+        function showSuccess(elementId, message) {
+            const successEl = document.getElementById(elementId);
+            if (successEl) {
+                successEl.textContent = message;
+                successEl.style.display = 'block';
+            }
+        }
+
+        function setButtonLoading(buttonId, isLoading, originalText) {
+            const btn = document.getElementById(buttonId);
+            if (btn) {
+                if (isLoading) {
+                    btn.disabled = true;
+                    btn.innerHTML = '<span class="loading-spinner"></span> Please wait...';
+                } else {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                }
+            }
+        }
+    </script>
+</body>
+</html>
