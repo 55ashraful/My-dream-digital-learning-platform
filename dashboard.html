@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Teacher Dashboard - My Dream Digital</title>
+    <title>Dashboard - My Dream Digital</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
@@ -36,8 +36,6 @@
         .btn-secondary:hover { border-color: var(--accent); background: var(--card-hover); }
         .btn-danger { background: #ef4444; color: #fff; font-weight: 600; padding: 12px 24px; border-radius: 10px; transition: all 0.3s ease; border: none; cursor: pointer; width: 100%; }
         .btn-danger:hover { background: #dc2626; }
-        .btn-warning { background: #f59e0b; color: #fff; font-weight: 600; padding: 10px 20px; border-radius: 10px; transition: all 0.3s ease; border: none; cursor: pointer; }
-        .btn-warning:hover { background: #d97706; }
         .input-field { background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; color: var(--text); width: 100%; transition: all 0.3s ease; -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text; user-select: text; }
         .input-field:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
         .sidebar { position: fixed; left: -320px; top: 0; width: 300px; height: 100vh; background: var(--bg-secondary); border-right: 1px solid var(--border); z-index: 1000; transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1); overflow-y: auto; box-shadow: 2px 0 10px rgba(0,0,0,0.05); }
@@ -54,20 +52,24 @@
         .badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
         .badge-pending { background: rgba(245, 158, 11, 0.15); color: #b45309; }
         .badge-approved { background: rgba(16, 185, 129, 0.15); color: #047857; }
+        .badge-refer { background: rgba(59, 130, 246, 0.15); color: #1d4ed8; }
+        .badge-photo { background: rgba(168, 85, 247, 0.15); color: #6d28d9; }
         ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: #f1f5f9; } ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; } ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
         .animate-fadeInUp { animation: fadeInUp 0.6s ease forwards; } .animate-slideIn { animation: slideIn 0.5s ease forwards; }
         .stagger-1 { animation-delay: 0.1s; opacity: 0; } .stagger-2 { animation-delay: 0.2s; opacity: 0; } .stagger-3 { animation-delay: 0.3s; opacity: 0; } .stagger-4 { animation-delay: 0.4s; opacity: 0; }
-        .photo-preview { width: 120px; height: 120px; border-radius: 50%; border: 3px solid var(--accent); object-fit: cover; }
+        .photo-preview { width: 120px; height: 120px; border-radius: 50%; border: 3px solid var(--accent); object-fit: cover; pointer-events: none; }
         .photo-upload-btn { position: absolute; bottom: 0; right: calc(50% - 60px); background: var(--accent); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s ease; }
         .photo-upload-btn:hover { transform: scale(1.1); }
+        .task-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; transition: all 0.3s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+        .task-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 4px 15px var(--accent-glow); }
         .notice-item { background: rgba(0, 184, 148, 0.05); border-left: 3px solid var(--accent); padding: 16px; border-radius: 0 10px 10px 0; margin-bottom: 12px; }
-        .submission-card img { width: 100%; height: 250px; object-fit: cover; border-radius: 10px; background: #f1f5f9; }
+        img { pointer-events: none; }
         @media (max-width: 640px) { .balance-card { padding: 16px; } }
     </style>
 </head>
-<body ondragstart="return false" onselectstart="return false">
+<body ondragstart="return false" onselectstart="return false" oncontextmenu="return false">
 
     <div class="bg-pattern"></div>
     <div class="grid-overlay"></div>
@@ -85,7 +87,7 @@
                 </div>
                 <div>
                     <h3 id="sidebarName" class="font-semibold text-lg text-gray-800"></h3>
-                    <p class="text-sm text-gray-500">Photo Editing Teacher</p>
+                    <p id="sidebarRole" class="text-sm text-gray-500">Member</p>
                 </div>
             </div>
         </div>
@@ -95,8 +97,9 @@
             <div class="menu-item" onclick="showSection('balance')"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span>My Balance</span></div>
             <div class="menu-item" onclick="showSection('history')"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span>History</span></div>
             <div class="menu-item" onclick="showSection('withdraw')"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg><span>Withdraw</span></div>
-            <div class="menu-item" onclick="showSection('class')"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg><span>Class Links</span></div>
-            <div class="menu-item" onclick="showSection('review')"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg><span>Photo Review</span></div>
+            <div class="menu-item" onclick="showSection('task')"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg><span>Daily Task</span></div>
+            <div class="menu-item" onclick="showSection('submit')"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><span>Submit Work</span></div>
+            <div class="menu-item" onclick="window.location.href='class.html'"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg><span>Class</span></div>
             <div class="menu-item text-red-500" onclick="logout()"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg><span>Logout</span></div>
         </nav>
     </aside>
@@ -105,8 +108,8 @@
     <main class="relative z-10 min-h-screen p-4 sm:p-6">
         <header class="flex items-center justify-between mb-6">
             <div class="flex items-center gap-3">
-                <a href="../index.html"><img src="https://i.ibb.co/wNjHwXKF/1000033078.png" alt="Logo" class="h-10 w-10 rounded-full pointer-events-none"></a>
-                <h1 class="font-display text-xl font-bold text-gray-800">Teacher Panel</h1>
+                <a href="../index.html"><img src="https://i.ibb.co/wNjHwXKF/1000033078.png" alt="Logo" class="h-10 w-10 rounded-full"></a>
+                <h1 class="font-display text-xl font-bold text-gray-800">My Dream Digital</h1>
             </div>
             <div class="flex items-center gap-3">
                 <div class="three-dot" onclick="toggleSidebar()"><span></span><span></span><span></span></div>
@@ -118,7 +121,7 @@
             <section id="homeSection" class="section">
                 <div class="animate-fadeInUp stagger-1">
                     <h2 class="text-3xl sm:text-4xl font-bold mb-2 text-gray-800">Welcome, <span id="welcomeName"></span></h2>
-                    <p class="text-gray-500 mb-8">Review submissions and manage your class</p>
+                    <p class="text-gray-500 mb-8">Today is a great day to achieve your goals</p>
                 </div>
                 <div class="balance-card mb-6 animate-fadeInUp stagger-2">
                     <div class="relative z-10">
@@ -126,15 +129,19 @@
                         <h3 class="text-4xl font-bold text-gray-800 mb-4 font-display"><span id="homeBalance">0</span> TK</h3>
                         <div class="flex gap-3 flex-wrap">
                             <button class="btn-primary text-sm" onclick="showSection('withdraw')">Withdraw</button>
-                            <button class="btn-secondary text-sm" onclick="showSection('review')">Review Photos</button>
+                            <button class="btn-secondary text-sm" onclick="showSection('balance')">View Details</button>
                         </div>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6 animate-fadeInUp stagger-3">
-                    <div class="card p-4 text-center"><p class="text-2xl font-bold text-emerald-600" id="statPending">0</p><p class="text-sm text-gray-500">Pending Photos</p></div>
-                    <div class="card p-4 text-center"><p class="text-2xl font-bold text-blue-600" id="statApproved">0</p><p class="text-sm text-gray-500">Approved</p></div>
-                    <div class="card p-4 text-center"><p class="text-2xl font-bold text-purple-600" id="statBalance">0</p><p class="text-sm text-gray-500">Balance (TK)</p></div>
-                    <div class="card p-4 text-center"><p class="text-2xl font-bold text-yellow-600" id="statWithdrawn">0</p><p class="text-sm text-gray-500">Withdrawn</p></div>
+                    <div class="card p-4 text-center"><p class="text-2xl font-bold text-emerald-600" id="statRefers">0</p><p class="text-sm text-gray-500">Total Refers</p></div>
+                    <div class="card p-4 text-center"><p class="text-2xl font-bold text-blue-600" id="statTasks">0</p><p class="text-sm text-gray-500">Tasks Done</p></div>
+                    <div class="card p-4 text-center"><p class="text-2xl font-bold text-purple-600" id="statPhotos">0</p><p class="text-sm text-gray-500">Photos Submitted</p></div>
+                    <div class="card p-4 text-center"><p class="text-2xl font-bold text-yellow-600" id="statWithdraw">0</p><p class="text-sm text-gray-500">Withdrawals</p></div>
+                </div>
+                <div class="card p-5 animate-fadeInUp stagger-4">
+                    <h3 class="text-lg font-semibold mb-4 text-gray-800">Recent Activity</h3>
+                    <div id="recentActivity" class="space-y-3"></div>
                 </div>
             </section>
 
@@ -151,20 +158,48 @@
                         <p id="uploadStatus" class="text-sm text-gray-500 mt-2"></p>
                     </div>
                     <div class="space-y-4">
-                        <div><label class="block text-sm text-gray-500 mb-1">Email</label><input type="email" id="profileEmail" class="input-field" readonly></div>
-                        <div><label class="block text-sm text-gray-500 mb-1">Password</label><input type="text" id="profilePassword" class="input-field"></div>
+                        <div><label class="block text-sm text-gray-500 mb-1">Name</label><input type="text" id="profileName" class="input-field" placeholder="Your Name"></div>
+                        <div><label class="block text-sm text-gray-500 mb-1">Email</label><input type="email" id="profileEmail" class="input-field" placeholder="Your Email"></div>
+                        <div><label class="block text-sm text-gray-500 mb-1">WhatsApp Number</label><input type="tel" id="profilePhone" class="input-field" placeholder="Your WhatsApp"></div>
+                        <div><label class="block text-sm text-gray-500 mb-1">Password</label><input type="text" id="profilePassword" class="input-field" placeholder="Your Password"></div>
+                        <div><label class="block text-sm text-gray-500 mb-1">My Referral Code</label><input type="text" id="profileReferCode" class="input-field bg-gray-100" readonly></div>
                         <button class="btn-primary w-full mt-4" onclick="saveProfile()">Save Changes</button>
+                        <button class="btn-danger mt-2" onclick="deleteAccount()">Delete Account</button>
                     </div>
                 </div>
             </section>
 
-            <!-- Balance Section -->
+            <!-- Balance & Referral Section -->
             <section id="balanceSection" class="section hidden">
-                <h2 class="text-2xl font-bold mb-6 animate-fadeInUp text-gray-800">My Balance</h2>
+                <h2 class="text-2xl font-bold mb-6 animate-fadeInUp text-gray-800">My Balance & Referral</h2>
                 <div class="balance-card mb-6 animate-fadeInUp stagger-1">
                     <div class="relative z-10 text-center">
                         <p class="text-gray-500 mb-1">Total Balance</p>
                         <h3 class="text-5xl font-bold text-gray-800 mb-2 font-display"><span id="balanceAmount">0</span> TK</h3>
+                    </div>
+                </div>
+                <div class="card p-5 mb-6 animate-fadeInUp stagger-2">
+                    <h3 class="text-lg font-semibold mb-4 text-gray-800">Refer & Earn (100 TK per refer)</h3>
+                    <div class="bg-gray-50 rounded-lg p-4 mb-4 border border-gray-100">
+                        <p class="text-sm text-gray-500 mb-1">Your Refer Code</p>
+                        <div class="flex items-center gap-2">
+                            <span id="referCode" class="text-xl font-mono font-bold text-emerald-600"></span>
+                            <button class="text-gray-400 hover:text-emerald-600" onclick="copyReferCode()"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg></button>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 rounded-lg p-4 mb-4 border border-gray-100">
+                        <p class="text-sm text-gray-500 mb-1">Your Refer Link</p>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span id="referLink" class="text-sm text-emerald-600 break-all"></span>
+                            <div class="flex gap-2">
+                                <button class="text-gray-400 hover:text-emerald-600" onclick="copyReferLink()"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg></button>
+                                <button class="text-gray-400 hover:text-emerald-600" onclick="shareReferLink()"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg></button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-gray-50 rounded-lg p-4 text-center border border-gray-100"><p class="text-3xl font-bold text-emerald-600" id="totalRefers">0</p><p class="text-sm text-gray-500">Total Refers</p></div>
+                        <div class="bg-gray-50 rounded-lg p-4 text-center border border-gray-100"><p class="text-3xl font-bold text-yellow-600" id="referEarnings">0</p><p class="text-sm text-gray-500">Refer Earnings (TK)</p></div>
                     </div>
                 </div>
             </section>
@@ -173,6 +208,18 @@
             <section id="historySection" class="section hidden">
                 <h2 class="text-2xl font-bold mb-6 animate-fadeInUp text-gray-800">History</h2>
                 <div class="card p-5 animate-fadeInUp stagger-1">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800">Earnings & Transactions</h3>
+                        <select id="historyFilter" class="input-field w-auto text-sm" onchange="filterHistory()">
+                            <option value="all">All</option>
+                            <option value="refer">Refer Bonus</option>
+                            <option value="task">Daily Task</option>
+                            <option value="photo">Photo Submit</option>
+                            <option value="bonus">Bonus</option>
+                            <option value="withdraw_pending">Withdraw Pending</option>
+                            <option value="withdraw_approved">Withdraw Approved</option>
+                        </select>
+                    </div>
                     <div id="historyList" class="space-y-3"></div>
                 </div>
             </section>
@@ -192,29 +239,40 @@
                 </div>
             </section>
 
-            <!-- Class Links Section -->
-            <section id="classSection" class="section hidden">
-                <h2 class="text-2xl font-bold mb-6 animate-fadeInUp text-gray-800">Class Links</h2>
-                <div class="card p-5 mb-6 animate-fadeInUp stagger-1">
-                    <h3 class="text-lg font-semibold mb-4 text-gray-800">Send New Class Link</h3>
-                    <div class="space-y-4">
-                        <div><label class="block text-sm text-gray-500 mb-1">Class Title</label><input type="text" id="classTitle" class="input-field" placeholder="e.g. Batch 5 Morning Class"></div>
-                        <div><label class="block text-sm text-gray-500 mb-1">Meeting URL</label><input type="url" id="classUrl" class="input-field" placeholder="Zoom/Google Meet Link"></div>
-                        <div><label class="block text-sm text-gray-500 mb-1">Description</label><textarea id="classDesc" class="input-field" rows="3" placeholder="Instructions for students..."></textarea></div>
-                        <button class="btn-primary w-full" onclick="postClassLink()">Post Link</button>
-                    </div>
-                </div>
-                <div class="card p-5 animate-fadeInUp stagger-2">
-                    <h3 class="text-lg font-semibold mb-4 text-gray-800">Recent Links</h3>
-                    <div id="classLinksList" class="space-y-3"></div>
-                </div>
+            <!-- Daily Task Section -->
+            <section id="taskSection" class="section hidden">
+                <h2 class="text-2xl font-bold mb-6 animate-fadeInUp text-gray-800">Daily Task</h2>
+                <p class="text-gray-500 mb-4 animate-fadeInUp stagger-1">Complete 10 tasks daily and earn 2 TK per task</p>
+                <div id="taskList" class="grid gap-4 animate-fadeInUp stagger-2"></div>
             </section>
 
-            <!-- Photo Review Section -->
-            <section id="reviewSection" class="section hidden">
-                <h2 class="text-2xl font-bold mb-6 animate-fadeInUp text-gray-800">Photo Submissions Review</h2>
-                <div class="notice-item mb-6 animate-fadeInUp stagger-1"><p class="font-semibold text-emerald-600">Approval Rule</p><p class="text-sm text-gray-600 mt-1">If you approve a photo, the user will automatically receive <strong>+2 TK</strong> in their balance.</p></div>
-                <div id="reviewList" class="grid gap-4 animate-fadeInUp stagger-2"></div>
+            <!-- Submit Work Section -->
+            <section id="submitSection" class="section hidden">
+                <h2 class="text-2xl font-bold mb-6 animate-fadeInUp text-gray-800">Submit Work</h2>
+                <div class="notice-item mb-6 animate-fadeInUp stagger-1">
+                    <p class="font-semibold text-emerald-600">Submission Guidelines</p>
+                    <p class="text-sm text-gray-600 mt-1">You can submit minimum 50 photos (no maximum limit). Maximum 2 photos per day. You will earn 2 TK per photo <strong>after admin approval</strong>.</p>
+                </div>
+                <div class="card p-5 mb-6 animate-fadeInUp stagger-2">
+                    <h3 class="text-lg font-semibold mb-4 text-gray-800">Submit Photo</h3>
+                    <div class="space-y-4">
+                        <div><label class="block text-sm text-gray-500 mb-1">Photo Title</label><input type="text" id="photoTitle" class="input-field" placeholder="Enter photo title"></div>
+                        <div>
+                            <label class="block text-sm text-gray-500 mb-1">Upload Photo</label>
+                            <input type="file" id="submitPhotoInput" accept="image/*" class="hidden" onchange="handleWorkPhoto(this)">
+                            <label for="submitPhotoInput" class="btn-secondary inline-flex items-center gap-2 cursor-pointer">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                Choose Photo
+                            </label>
+                            <p id="selectedFileName" class="text-sm text-gray-500 mt-2"></p>
+                        </div>
+                        <button class="btn-primary w-full" onclick="submitPhotoWork()">Submit Photo</button>
+                    </div>
+                </div>
+                <div class="card p-5 animate-fadeInUp stagger-3">
+                    <h3 class="text-lg font-semibold mb-4 text-gray-800">Submission History</h3>
+                    <div id="submissionHistory" class="space-y-3"></div>
+                </div>
             </section>
         </div>
     </main>
@@ -222,9 +280,25 @@
     <div id="toast" class="fixed bottom-4 right-4 bg-emerald-600 text-white px-6 py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50"><span id="toastMessage"></span></div>
 
     <script>
-        document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
-        document.onkeydown = function(e) { if(e.keyCode == 123) return false; if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) return false; if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false; }
+        // ১. অত্যন্ত কঠোর কপিরাইট প্রোটেকশন সিস্টেম
+        document.addEventListener('contextmenu', function(e) { e.preventDefault(); }); // ডান ক্লিক বন্ধ
+        
+        document.onkeydown = function(e) {
+            // F12 বন্ধ
+            if(e.keyCode == 123) return false;
+            // Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C বন্ধ (DevTools)
+            if(e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0) || e.keyCode == 'C'.charCodeAt(0))) return false;
+            // Ctrl+U (View Source), Ctrl+S (Save), Ctrl+P (Print) বন্ধ
+            if(e.ctrlKey && (e.keyCode == 'U'.charCodeAt(0) || e.keyCode == 'S'.charCodeAt(0) || e.keyCode == 'P'.charCodeAt(0))) return false;
+        }
 
+        // কপি, কাট, পেস্ট বন্ধ করে দেওয়া হলো
+        document.addEventListener('copy', function(e) { e.preventDefault(); });
+        document.addEventListener('cut', function(e) { e.preventDefault(); });
+        document.addEventListener('paste', function(e) { e.preventDefault(); });
+
+
+        // ২. ফায়ারবেস কনফিগারেশন
         const firebaseConfig = {
           apiKey: "AIzaSyB8aEO4CyIP6l4kspuo_sJUMTwUzp0NvzU",
           authDomain: "my-income-d85b2.firebaseapp.com",
@@ -236,41 +310,71 @@
         };
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
+
         const IMGBB_API_KEY = '07bb6a485d95048a7add76d3207d44be';
+        const BASE_URL = 'https://my-dream-digital-learning-platform.vercel.app/signup.html';
         
+        // ৩. পারমিশন রোল সিস্টেম (এই ১৮টি রোল ছাড়া কেউ ঢুকতে পারবে না)
+        const ALLOWED_ROLES = [
+            "Counselor", "Senior Team Leader", "Team Leader", "Trainer", "Teacher", 
+            "Account Manager", "Photo editing teacher", "Video editing teacher", 
+            "Senior counselor", "Helpline", "Web developer", "Marketing team", 
+            "Qualification team", "Senior teacher", "Senior Manager", 
+            "Counsellor Manager", "Marketing Manager", "Accounte", "Member", "User", "user" // সাধারণ ইউজারদের জন্য Member/User রাখা হয়েছে
+        ];
+
         let currentUserData = {};
         let userId = null;
-        let totalPendingGlobal = 0;
-        let totalApprovedGlobal = 0;
+        let selectedWorkPhoto = null;
 
         document.addEventListener('DOMContentLoaded', () => {
-            if (localStorage.getItem('userRole') !== 'subadmin' || localStorage.getItem('userSubRole') !== 'Photo editing teacher') {
-                window.location.href = '../sub-admin-login.html'; return;
+            // রাউট প্রোটেকশন: লগইন ছাড়া ঢোকার চেষ্টা করলে লগইন পেজে নিয়ে যাবে
+            if (localStorage.getItem('isLoggedIn') !== 'true' || !localStorage.getItem('userId')) {
+                window.location.href = '../login.html'; return;
             }
             userId = localStorage.getItem('userId');
-            loadTeacherData();
-            loadPhotoSubmissions();
-            loadClassLinks();
+            loadUserData();
             createParticles();
         });
 
-        function loadTeacherData() {
-            database.ref('subadmins/' + userId).on('value', (snapshot) => {
+        function loadUserData() {
+            database.ref('users/' + userId).on('value', (snapshot) => {
                 if (snapshot.exists()) {
                     currentUserData = snapshot.val();
+                    
+                    // রোল চেকিং: ইউজারের রোল যদি ALLOWED_ROLES এর ভিতরে না থাকে, তবে বের করে দিবে
+                    const userRole = currentUserData.role || 'Member'; // যদি রোল সেট করা না থাকে, তাহলে 'Member' ধরবে
+                    if (!ALLOWED_ROLES.includes(userRole)) {
+                        showToast('Access Denied! Unauthorized Role.', 'error');
+                        setTimeout(() => { logout(); }, 1500);
+                        return;
+                    }
+
                     currentUserData.balance = currentUserData.balance || 0;
-                    currentUserData.totalWithdrawn = currentUserData.totalWithdrawn || 0;
+                    currentUserData.totalRefers = currentUserData.totalRefers || 0;
+                    currentUserData.tasksCompleted = currentUserData.tasksCompleted || 0;
+                    currentUserData.photosSubmitted = currentUserData.photosSubmitted || 0;
+                    currentUserData.totalWithdrawals = currentUserData.totalWithdrawals || 0;
                     currentUserData.history = currentUserData.history || [];
+                    currentUserData.submissions = currentUserData.submissions || [];
+                    currentUserData.myReferralCode = currentUserData.myReferralCode || generateReferCode();
+                    currentUserData.dailyTasksCompleted = currentUserData.dailyTasksCompleted || [];
                     initPageUI();
                 } else { logout(); }
             });
         }
 
+        function generateReferCode() { return 'MDD' + Math.random().toString(36).substring(2, 8).toUpperCase(); }
+
         function initPageUI() {
             const u = currentUserData;
-            document.getElementById('welcomeName').textContent = u.email.split('@')[0];
-            document.getElementById('sidebarName').textContent = u.email.split('@')[0];
-            document.getElementById('sidebarInitial').textContent = u.email.charAt(0).toUpperCase();
+            const fullName = (u.firstName || '') + ' ' + (u.lastName || '');
+            const displayRole = u.role || 'Member';
+            
+            document.getElementById('welcomeName').textContent = fullName;
+            document.getElementById('sidebarName').textContent = fullName;
+            document.getElementById('sidebarRole').textContent = displayRole; // সাইডবারে রোল দেখাচ্ছে
+            document.getElementById('sidebarInitial').textContent = fullName.charAt(0).toUpperCase();
             
             if (u.photo) {
                 document.getElementById('sidebarPhoto').src = u.photo; document.getElementById('sidebarPhoto').classList.remove('hidden'); document.getElementById('sidebarInitial').classList.add('hidden');
@@ -279,159 +383,37 @@
             
             document.getElementById('homeBalance').textContent = u.balance;
             document.getElementById('balanceAmount').textContent = u.balance;
-            document.getElementById('statBalance').textContent = u.balance;
-            document.getElementById('statWithdrawn').textContent = u.totalWithdrawn;
+            document.getElementById('statRefers').textContent = u.totalRefers;
+            document.getElementById('statTasks').textContent = u.tasksCompleted;
+            document.getElementById('statPhotos').textContent = u.photosSubmitted;
+            document.getElementById('statWithdraw').textContent = u.totalWithdrawals;
             
-            document.getElementById('profileEmail').value = u.email;
-            document.getElementById('profilePassword').value = u.password;
+            document.getElementById('referCode').textContent = u.myReferralCode;
+            document.getElementById('referLink').textContent = `${BASE_URL}?ref=${u.myReferralCode}`;
+            document.getElementById('totalRefers').textContent = u.totalRefers;
+            document.getElementById('referEarnings').textContent = u.totalRefers * 100;
             
-            loadHistory();
+            document.getElementById('profileName').value = fullName;
+            document.getElementById('profileEmail').value = u.email || '';
+            document.getElementById('profilePhone').value = u.whatsapp || '';
+            document.getElementById('profilePassword').value = u.password || '';
+            document.getElementById('profileReferCode').value = u.myReferralCode;
+            
+            loadRecentActivity(); loadHistory(); loadTasks(); loadSubmissions();
         }
 
-        function loadPhotoSubmissions() {
-            database.ref('photo_submissions').on('value', (snapshot) => {
-                const c = document.getElementById('reviewList');
-                c.innerHTML = ''; totalPendingGlobal = 0; totalApprovedGlobal = 0;
-                
-                if (!snapshot.exists()) { c.innerHTML = '<p class="text-gray-400 text-center py-8">এখনো কোনো ছবি জমা দেওয়া হয়নি</p>'; updateStats(); return; }
-                
-                let pendingHtml = '';
-                
-                snapshot.forEach(child => {
-                    const data = child.val(); const subId = child.key;
-                    if(data.status === 'pending') totalPendingGlobal++;
-                    if(data.status === 'approved') totalApprovedGlobal++;
-
-                    // শুধুমাত্র Pending ছবিগুলো এডিট করার জন্য দেখাবে
-                    if(data.status === 'pending') {
-                        pendingHtml += `
-                        <div class="card submission-card p-4 animate-fadeInUp" id="sub-${subId}">
-                            <img src="${data.photo}" alt="Submission" class="mb-4">
-                            <div class="flex justify-between items-center mb-3">
-                                <div>
-                                    <p class="font-semibold text-gray-800">${data.title || 'User Photo'}</p>
-                                    <p class="text-sm text-gray-500">User ID: ${data.userId ? data.userId.substring(0,8) + '...' : 'Unknown'}</p>
-                                </div>
-                                <span class="badge badge-pending">Pending</span>
-                            </div>
-                            <div class="flex gap-2 flex-wrap">
-                                <label class="btn-warning text-sm cursor-pointer flex items-center gap-1">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-                                    Upload Edited
-                                    <input type="file" accept="image/*" class="hidden" onchange="uploadEditedPhoto(this, '${subId}')">
-                                </label>
-                                <button class="btn-primary text-sm" onclick="approvePhoto('${subId}', '${data.userId}')">Approve (+2 TK)</button>
-                            </div>
-                        </div>`;
-                    }
-                });
-
-                document.getElementById('statPending').textContent = totalPendingGlobal;
-                document.getElementById('statApproved').textContent = totalApprovedGlobal;
-                
-                if(totalPendingGlobal === 0) {
-                    c.innerHTML = '<p class="text-gray-400 text-center py-8">কোনো পেন্ডিং ছবি নেই!</p>';
-                } else {
-                    c.innerHTML = pendingHtml;
-                }
-            });
+        function createParticles() { const c = document.getElementById('particles'); if(!c) return; c.innerHTML = ''; for (let i = 0; i < 15; i++) { const p = document.createElement('div'); p.className = 'particle'; p.style.left = Math.random() * 100 + '%'; p.style.top = Math.random() * 100 + '%'; p.style.animationDelay = Math.random() * 5 + 's'; p.style.animationDuration = (10 + Math.random() * 10) + 's'; c.appendChild(p); } }
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebarOverlay').classList.toggle('show'); }
+        
+        function showSection(section) {
+            document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
+            document.getElementById(section + 'Section').classList.remove('hidden');
+            document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
+            if(event && event.currentTarget) event.currentTarget.classList.add('active');
+            if (window.innerWidth < 768) toggleSidebar();
         }
 
-        async function approvePhoto(subId, uId) {
-            if(!uId) { showToast('User ID not found!', 'error'); return; }
-            try {
-                // ১. ইউজারের ব্যালেন্স বাড়ানো
-                const userBalSnap = await database.ref('users/' + uId + '/balance').once('value');
-                const currentBal = userBalSnap.val() || 0;
-                const newBal = currentBal + 2;
-                await database.ref('users/' + uId + '/balance').set(newBal);
-
-                // ২. গ্লোবাল photo_submissions এ Status Approved করা
-                await database.ref('photo_submissions/' + subId).update({ status: 'approved' });
-
-                // ৩. ইউজারের নিজস্ব submissions লিস্টেও Status Approved করা (যাতে ইউজার দেখতে পারে)
-                const userSubsSnap = await database.ref('users/' + uId + '/submissions').once('value');
-                if (userSubsSnap.exists()) {
-                    const subs = userSubsSnap.val();
-                    for (let i = 0; i < subs.length; i++) {
-                        // ইউজারের সাবমিশন লিস্টে যদি এই ছবির subId মিলে যায়
-                        if (subs[i].subId === subId) {
-                            await database.ref('users/' + uId + '/submissions/' + i + '/status').set('approved');
-                            break;
-                        }
-                    }
-                }
-
-                // ৪. টিচারের ব্যালেন্স ও হিস্ট্রি আপডেট
-                const newHistory = [ ...(currentUserData.history || []) ];
-                newHistory.unshift({ title: 'Photo Approved Reward', type: 'photo_review', amount: 1, date: new Date().toLocaleDateString() });
-                await database.ref('subadmins/' + userId).update({ 
-                    balance: (currentUserData.balance || 0) + 1,
-                    history: newHistory 
-                });
-
-                showToast('Photo Approved! User got +2 TK');
-            } catch(e) { 
-                console.error(e);
-                showToast('Failed to approve', 'error'); 
-            }
-        }
-
-        async function uploadEditedPhoto(input, subId) {
-            if (!input.files || !input.files[0]) return;
-            showToast('Uploading edited photo...', 'success');
-            const formData = new FormData(); formData.append('image', input.files[0]); formData.append('key', IMGBB_API_KEY);
-            try {
-                const res = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData });
-                const data = await res.json();
-                if (data.success) {
-                    await database.ref('photo_submissions/' + subId).update({ editedPhoto: data.data.url });
-                    showToast('Edited photo uploaded!');
-                } else { throw new Error(); }
-            } catch (e) { showToast('Upload failed', 'error'); }
-        }
-
-        function postClassLink() {
-            const title = document.getElementById('classTitle').value;
-            const url = document.getElementById('classUrl').value;
-            const desc = document.getElementById('classDesc').value;
-            if (!title || !url) { showToast('Title and URL required', 'error'); return; }
-            database.ref('class_links').push({
-                teacherId: userId, title: title, url: url, desc: desc, timestamp: Date.now()
-            }).then(() => {
-                document.getElementById('classTitle').value = '';
-                document.getElementById('classUrl').value = '';
-                document.getElementById('classDesc').value = '';
-                showToast('Class link posted!');
-            });
-        }
-
-        function loadClassLinks() {
-            database.ref('class_links').orderByChild('teacherId').equalTo(userId).limitToLast(10).on('value', (snapshot) => {
-                const c = document.getElementById('classLinksList');
-                c.innerHTML = '';
-                if (!snapshot.exists()) { c.innerHTML = '<p class="text-gray-400 text-center py-4">No links posted yet</p>'; return; }
-                snapshot.forEach(child => {
-                    const data = child.val();
-                    c.innerHTML += `
-                    <div class="p-4 bg-gray-50 rounded-lg border border-gray-100">
-                        <h4 class="font-semibold text-gray-800">${data.title}</h4>
-                        <a href="${data.url}" target="_blank" class="text-emerald-600 text-sm hover:underline break-all">${data.url}</a>
-                        ${data.desc ? `<p class="text-sm text-gray-500 mt-1">${data.desc}</p>` : ''}
-                    </div>`;
-                });
-            });
-        }
-
-        function loadHistory() {
-            const c = document.getElementById('historyList'); const h = currentUserData.history || [];
-            if (h.length === 0) { c.innerHTML = '<p class="text-gray-400 text-center py-8">No history yet</p>'; return; }
-            c.innerHTML = h.map(i => `
-                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
-                    <div><p class="font-medium text-gray-800">${i.title}</p><p class="text-sm text-gray-500">${i.date}</p></div>
-                    <span class="text-emerald-600 font-semibold">${i.type === 'withdraw_pending' ? '-' : '+'}${i.amount} TK</span>
-                </div>`).join('');
-        }
+        function showToast(message, type = 'success') { const t = document.getElementById('toast'); const m = document.getElementById('toastMessage'); m.textContent = message; t.style.background = type === 'success' ? '#10b981' : '#ef4444'; t.classList.remove('translate-y-20', 'opacity-0'); t.classList.add('translate-y-0', 'opacity-100'); setTimeout(() => { t.classList.remove('translate-y-0', 'opacity-100'); t.classList.add('translate-y-20', 'opacity-0'); }, 3000); }
 
         async function uploadProfilePhoto(input) {
             if (!input.files || !input.files[0]) return;
@@ -441,7 +423,7 @@
                 const res = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData });
                 const data = await res.json();
                 if (data.success) {
-                    database.ref('subadmins/' + userId + '/photo').set(data.data.url);
+                    database.ref('users/' + userId + '/photo').set(data.data.url);
                     document.getElementById('uploadStatus').textContent = 'Uploaded successfully!';
                     showToast('Photo updated!');
                 } else { throw new Error(); }
@@ -449,8 +431,47 @@
         }
 
         function saveProfile() {
-            const updates = { password: document.getElementById('profilePassword').value };
-            database.ref('subadmins/' + userId).update(updates).then(() => showToast('Profile saved!')).catch(() => showToast('Failed', 'error'));
+            const nameVal = document.getElementById('profileName').value.trim().split(' ');
+            const updates = {
+                firstName: nameVal[0] || '', lastName: nameVal.slice(1).join(' ') || '',
+                email: document.getElementById('profileEmail').value,
+                whatsapp: document.getElementById('profilePhone').value,
+                password: document.getElementById('profilePassword').value
+            };
+            database.ref('users/' + userId).update(updates).then(() => showToast('Profile saved!')).catch(() => showToast('Failed to save', 'error'));
+        }
+
+        function deleteAccount() { if(confirm('Are you sure? Your account will be permanently deleted!')) { database.ref('users/' + userId).remove().then(() => { logout(); }); } }
+
+        function copyReferCode() { navigator.clipboard.writeText(currentUserData.myReferralCode); showToast('Refer code copied!'); }
+        function copyReferLink() { navigator.clipboard.writeText(`${BASE_URL}?ref=${currentUserData.myReferralCode}`); showToast('Refer link copied!'); }
+        function shareReferLink() { if (navigator.share) { navigator.share({ title: 'Join My Dream Digital', text: 'Use my refer code: ' + currentUserData.myReferralCode, url: `${BASE_URL}?ref=${currentUserData.myReferralCode}` }); } else { copyReferLink(); } }
+
+        function loadHistory() {
+            const c = document.getElementById('historyList');
+            const h = currentUserData.history || [];
+            if (h.length === 0) { c.innerHTML = '<p class="text-gray-400 text-center py-8">No history yet</p>'; return; }
+            renderHistoryList(h);
+        }
+
+        function filterHistory() {
+            const filter = document.getElementById('historyFilter').value;
+            let h = currentUserData.history || [];
+            if (filter !== 'all') { h = h.filter(item => item.type === filter); }
+            renderHistoryList(h);
+        }
+
+        function renderHistoryList(items) {
+            const c = document.getElementById('historyList');
+            if (items.length === 0) { c.innerHTML = '<p class="text-gray-400 text-center py-8">No history found</p>'; return; }
+            c.innerHTML = items.map(item => {
+                let badgeClass = 'badge-approved'; let statusText = '';
+                if(item.type === 'withdraw_pending') { badgeClass = 'badge-pending'; statusText = 'Pending'; }
+                else if(item.type === 'withdraw_approved') { badgeClass = 'badge-approved'; statusText = 'Approved'; }
+                else if(item.type === 'refer') { badgeClass = 'badge-refer'; statusText = 'Refer'; }
+                else if(item.type === 'photo') { badgeClass = 'badge-photo'; statusText = 'Photo'; }
+                return `<div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100"><div><p class="font-medium text-gray-800">${item.title}</p><p class="text-sm text-gray-500">${item.date}</p></div><div class="text-right"><p class="font-semibold text-gray-800">${item.type.includes('withdraw') ? '-' : '+'}${item.amount} TK</p>${statusText ? `<span class="badge ${badgeClass}">${statusText}</span>` : ''}</div></div>`;
+            }).join('');
         }
 
         function requestWithdraw() {
@@ -463,18 +484,114 @@
             const newBalance = currentUserData.balance - amount;
             const newHistory = [ ...(currentUserData.history || []) ];
             newHistory.unshift({ title: `Withdraw via ${method}`, type: 'withdraw_pending', amount: amount, date: new Date().toLocaleDateString() });
-            const updates = { balance: newBalance, totalWithdrawn: (currentUserData.totalWithdrawn || 0) + amount, history: newHistory };
-            database.ref('subadmins/' + userId).update(updates).then(() => {
-                document.getElementById('withdrawAccount').value = ''; document.getElementById('withdrawAmount').value = '';
-                showToast('Withdrawal request submitted!');
-            });
+            const updates = { balance: newBalance, totalWithdrawals: (currentUserData.totalWithdrawals || 0) + 1, history: newHistory };
+            database.ref('users/' + userId).update(updates).then(() => { document.getElementById('withdrawAccount').value = ''; document.getElementById('withdrawAmount').value = ''; showToast('Withdrawal request submitted!'); });
         }
 
-        function createParticles() { const c = document.getElementById('particles'); if(!c) return; c.innerHTML = ''; for (let i = 0; i < 15; i++) { const p = document.createElement('div'); p.className = 'particle'; p.style.left = Math.random() * 100 + '%'; p.style.top = Math.random() * 100 + '%'; p.style.animationDelay = Math.random() * 5 + 's'; p.style.animationDuration = (10 + Math.random() * 10) + 's'; c.appendChild(p); } }
-        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebarOverlay').classList.toggle('show'); }
-        function showSection(section) { document.querySelectorAll('.section').forEach(s => s.classList.add('hidden')); document.getElementById(section + 'Section').classList.remove('hidden'); document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active')); if(event && event.currentTarget) event.currentTarget.classList.add('active'); if (window.innerWidth < 768) toggleSidebar(); }
-        function showToast(message, type = 'success') { const t = document.getElementById('toast'); const m = document.getElementById('toastMessage'); m.textContent = message; t.style.background = type === 'success' ? '#10b981' : '#ef4444'; t.classList.remove('translate-y-20', 'opacity-0'); t.classList.add('translate-y-0', 'opacity-100'); setTimeout(() => { t.classList.remove('translate-y-0', 'opacity-100'); t.classList.add('translate-y-20', 'opacity-0'); }, 3000); }
-        function logout() { localStorage.clear(); window.location.href = '../sub-admin-login.html'; }
+        function loadTasks() {
+            const c = document.getElementById('taskList');
+            const today = new Date().toDateString();
+            if (currentUserData.lastTaskDate !== today) { database.ref('users/' + userId).update({ dailyTasksCompleted: [], lastTaskDate: today }); currentUserData.dailyTasksCompleted = []; }
+            const tasks = [ {id:1, title:'Watch Video Ad'}, {id:2, title:'Social Share'}, {id:3, title:'Daily Check-in'}, {id:4, title:'Survey'}, {id:5, title:'App Install'}, {id:6, title:'Refer Friend'}, {id:7, title:'Photo Task'}, {id:8, title:'Read Article'}, {id:9, title:'Play Game'}, {id:10, title:'Bonus Task'} ];
+            c.innerHTML = tasks.map(t => {
+                const done = (currentUserData.dailyTasksCompleted || []).includes(t.id);
+                return `<div class="task-card flex items-center justify-between"><div><p class="font-medium text-gray-800">${t.title}</p></div><div class="flex items-center gap-3"><span class="text-emerald-600 font-semibold">+2 TK</span><button class="btn-${done ? 'secondary opacity-50' : 'primary'} text-sm" onclick="completeTask(${t.id})" ${done ? 'disabled' : ''}>${done ? 'Done' : 'Start'}</button></div></div>`;
+            }).join('');
+        }
+
+        function completeTask(taskId) {
+            if ((currentUserData.dailyTasksCompleted || []).includes(taskId)) return;
+            const newTasks = [...(currentUserData.dailyTasksCompleted || []), taskId];
+            const newHistory = [ ...(currentUserData.history || []) ];
+            newHistory.unshift({ title: 'Daily Task Completed', type: 'task', amount: 2, date: new Date().toLocaleDateString() });
+            const updates = { dailyTasksCompleted: newTasks, balance: (currentUserData.balance || 0) + 2, tasksCompleted: (currentUserData.tasksCompleted || 0) + 1, history: newHistory };
+            database.ref('users/' + userId).update(updates).then(() => showToast('Task completed! +2 TK'));
+        }
+
+        function handleWorkPhoto(input) {
+            if (!input.files || !input.files[0]) return;
+            selectedWorkPhoto = input.files[0];
+            document.getElementById('selectedFileName').textContent = selectedWorkPhoto.name;
+        }
+
+        async function submitPhotoWork() {
+            const title = document.getElementById('photoTitle').value;
+            if (!title || !selectedWorkPhoto) { showToast('Please fill all fields', 'error'); return; }
+            
+            const today = new Date().toDateString();
+            const todaySubmissions = (currentUserData.submissions || []).filter(s => new Date(s.timestamp).toDateString() === today);
+            if (todaySubmissions.length >= 2) { showToast('Daily limit reached (2 photos)', 'error'); return; }
+
+            const formData = new FormData(); formData.append('image', selectedWorkPhoto); formData.append('key', IMGBB_API_KEY);
+            showToast('Uploading photo...', 'success');
+
+            try {
+                const res = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData });
+                const data = await res.json();
+                
+                if (data.success) {
+                    const photoUrl = data.data.url;
+
+                    const globalSubRef = database.ref('photo_submissions').push();
+                    const globalSubId = globalSubRef.key;
+                    await globalSubRef.set({
+                        subId: globalSubId,
+                        title: title,
+                        photo: photoUrl,
+                        timestamp: Date.now(),
+                        date: new Date().toLocaleDateString(),
+                        status: 'pending',
+                        userId: userId
+                    });
+
+                    const newSubmissions = [ ...(currentUserData.submissions || []) ];
+                    newSubmissions.unshift({
+                        subId: globalSubId,
+                        title: title, photo: photoUrl, timestamp: Date.now(),
+                        date: new Date().toLocaleDateString(), status: 'pending'
+                    });
+                    
+                    const newHistory = [ ...(currentUserData.history || []) ];
+                    newHistory.unshift({ title: `Photo Submitted: ${title}`, type: 'photo', amount: 2, date: new Date().toLocaleDateString() });
+
+                    const updates = {
+                        submissions: newSubmissions,
+                        photosSubmitted: (currentUserData.photosSubmitted || 0) + 1,
+                        history: newHistory
+                    };
+                    
+                    await database.ref('users/' + userId).update(updates);
+                    document.getElementById('photoTitle').value = '';
+                    document.getElementById('selectedFileName').textContent = '';
+                    selectedWorkPhoto = null;
+                    showToast('Photo submitted! Pending admin approval.');
+                } else { throw new Error(); }
+            } catch (e) { showToast('Upload failed', 'error'); }
+        }
+
+        function loadSubmissions() {
+            const c = document.getElementById('submissionHistory');
+            const subs = currentUserData.submissions || [];
+            if (subs.length === 0) { c.innerHTML = '<p class="text-gray-400 text-center py-8">No submissions yet</p>'; return; }
+            c.innerHTML = subs.map(item => `
+                <div class="flex items-center gap-4 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                    <img src="${item.photo}" alt="${item.title}" class="w-16 h-16 rounded-lg object-cover">
+                    <div class="flex-1">
+                        <p class="font-medium text-gray-800">${item.title}</p>
+                        <p class="text-sm text-gray-500">${item.date}</p>
+                    </div>
+                    <span class="badge ${item.status === 'pending' ? 'badge-pending' : 'badge-approved'}">${item.status === 'pending' ? 'Pending' : 'Approved +2 TK'}</span>
+                </div>
+            `).join('');
+        }
+
+        function loadRecentActivity() {
+            const c = document.getElementById('recentActivity'); const h = currentUserData.history || [];
+            if (h.length === 0) { c.innerHTML = '<p class="text-gray-400 text-center py-4">No recent activity</p>'; return; }
+            c.innerHTML = h.slice(0, 5).map(i => `<div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100"><div><p class="font-medium text-gray-800">${i.title}</p><p class="text-sm text-gray-500">${i.date}</p></div><span class="text-emerald-600 font-semibold">${i.type.includes('withdraw') ? '-' : '+'}${i.amount} TK</span></div>`).join('');
+        }
+
+        function logout() { localStorage.removeItem('isLoggedIn'); localStorage.removeItem('userId'); window.location.href = '../login.html'; }
     </script>
 </body>
 </html>
