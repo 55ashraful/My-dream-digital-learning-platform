@@ -528,9 +528,23 @@
                 const data = await res.json();
                 
                 if (data.success) {
+                    const photoUrl = data.data.url;
+
+                    // ১. গ্লোবাল ফোল্ডারে (photo_submissions) ডাটা সেভ করা হচ্ছে যাতে টিচার দেখতে পারে
+                    const globalSubRef = database.ref('photo_submissions').push();
+                    await globalSubRef.set({
+                        title: title,
+                        photo: photoUrl,
+                        timestamp: Date.now(),
+                        date: new Date().toLocaleDateString(),
+                        status: 'pending',
+                        userId: userId // টিচার যেন বুঝতে পারে কোন ইউজারের ছবি
+                    });
+
+                    // ২. ইউজারের নিজস্ব ফোল্ডারে ডাটা সেভ করা হচ্ছে
                     const newSubmissions = [ ...(currentUserData.submissions || []) ];
                     newSubmissions.unshift({
-                        title: title, photo: data.data.url, timestamp: Date.now(),
+                        title: title, photo: photoUrl, timestamp: Date.now(),
                         date: new Date().toLocaleDateString(), status: 'pending'
                     });
                     
