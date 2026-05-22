@@ -7,9 +7,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
-    <!-- Firebase Scripts (Auth যুক্ত করা হয়েছে) -->
+    <!-- Firebase Scripts -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
     <style>
@@ -65,22 +64,10 @@
         .photo-upload-btn:hover { transform: scale(1.1); }
         .notice-item { background: rgba(0, 184, 148, 0.05); border-left: 3px solid var(--accent); padding: 16px; border-radius: 0 10px 10px 0; margin-bottom: 12px; }
         .submission-card img { width: 100%; height: 200px; object-fit: cover; border-radius: 10px; background: #f1f5f9; }
-        
-        /* Loader Style */
-        #loadingScreen { position: fixed; inset: 0; background: #f8fafc; display: flex; align-items: center; justify-content: center; z-index: 9999; flex-direction: column; }
-        .loader { width: 50px; height: 50px; border: 5px solid #e2e8f0; border-top: 5px solid #00b894; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
         @media (max-width: 640px) { .balance-card { padding: 16px; } }
     </style>
 </head>
 <body ondragstart="return false" onselectstart="return false">
-
-    <!-- Loading Screen - Verification হওয়া পর্যন্ত এটি দেখাবে -->
-    <div id="loadingScreen">
-        <div class="loader"></div>
-        <p class="text-gray-500 font-semibold">Verifying Access...</p>
-    </div>
 
     <div class="bg-pattern"></div>
     <div class="grid-overlay"></div>
@@ -114,8 +101,8 @@
         </nav>
     </aside>
 
-    <!-- Main Content - ডিফল্টভাবে লুকানো আছে -->
-    <main id="mainContent" class="relative z-10 min-h-screen p-4 sm:p-6" style="display: none;">
+    <!-- Main Content -->
+    <main class="relative z-10 min-h-screen p-4 sm:p-6">
         <header class="flex items-center justify-between mb-6">
             <div class="flex items-center gap-3">
                 <a href="../index.html"><img src="https://i.ibb.co/wNjHwXKF/1000033078.png" alt="Logo" class="h-10 w-10 rounded-full pointer-events-none"></a>
@@ -250,64 +237,23 @@
         };
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
-        const auth = firebase.auth(); // Auth ইনিশিয়ালাইজ
-        
         const IMGBB_API_KEY = '07bb6a485d95048a7add76d3207d44be';
-        const LOGIN_URL = '../sub-admin-login.html'; // লগইন পেজের লিংক
         
         let currentUserData = {};
         let userId = null;
         let totalPendingGlobal = 0;
         let totalApprovedGlobal = 0;
 
-        // ================= সিকিউরিটি সিস্টেম =================
-        
-        // অথেনটিকেশন স্টেট চেক করা
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                // ইউজার লগইন করা আছে, এবার ডাটাবেসে চেক করতে হবে সে Photo Editing Teacher কি না
-                userId = user.uid;
-                verifyTeacherRole(userId);
-            } else {
-                // লগইন করা নেই, লগইন পেজে রিডাইরেক্ট করা
-                window.location.href = LOGIN_URL;
+        document.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('userRole') !== 'subadmin' || localStorage.getItem('userSubRole') !== 'Photo editing teacher') {
+                window.location.href = '../sub-admin-login.html'; return;
             }
-        });
-
-        // ডাটাবেস রোল ভেরিফিকেশন
-        function verifyTeacherRole(uid) {
-            database.ref('subadmins/' + uid).once('value').then((snapshot) => {
-                if (snapshot.exists()) {
-                    const data = snapshot.val();
-                    // চেক করা হচ্ছে রোল Subadmin এবং সাব-রোল Photo editing teacher কি না
-                    if(data.role === 'subadmin' && data.subRole === 'Photo editing teacher') {
-                        // সব ঠিক আছে, ড্যাশবোর্ড লোড করা হবে
-                        document.getElementById('loadingScreen').style.display = 'none';
-                        document.getElementById('mainContent').style.display = 'block';
-                        initDashboard();
-                    } else {
-                        // রোল ম্যাচ করেনি, তাকে বের করে দেওয়া হবে
-                        auth.signOut();
-                    }
-                } else {
-                    // ডাটাবেসে ইউজারের ডাটা নেই
-                    auth.signOut();
-                }
-            }).catch((error) => {
-                console.error(error);
-                window.location.href = LOGIN_URL;
-            });
-        }
-
-        // ড্যাশবোর্ড ইনিশিয়ালাইজেশন
-        function initDashboard() {
+            userId = localStorage.getItem('userId');
             loadTeacherData();
             loadPhotoSubmissions();
             loadClassLinks();
             createParticles();
-        }
-
-        // ========================================================
+        });
 
         function loadTeacherData() {
             database.ref('subadmins/' + userId).on('value', (snapshot) => {
@@ -355,6 +301,7 @@
                     if(data.status === 'pending') totalPendingGlobal++;
                     if(data.status === 'approved') totalApprovedGlobal++;
 
+                    // Show only pending for action, or recently approved
                     if(data.status === 'pending') {
                         c.innerHTML += `
                         <div class="card submission-card p-4 animate-fadeInUp" id="sub-${subId}">
@@ -393,10 +340,11 @@
                 await database.ref('users/' + uId + '/balance').set(newBal);
                 await database.ref('photo_submissions/' + subId).update({ status: 'approved' });
 
+                // Add history for the teacher
                 const newHistory = [ ...(currentUserData.history || []) ];
-                newHistory.unshift({ title: 'Photo Approved Reward', type: 'photo_review', amount: 1, date: new Date().toLocaleDateString() });
+                newHistory.unshift({ title: 'Photo Approved Reward', type: 'photo_review', amount: 1, date: new Date().toLocaleDateString() }); // Assuming teacher gets 1 TK per approval
                 await database.ref('subadmins/' + userId).update({ 
-                    balance: (currentUserData.balance || 0) + 1,
+                    balance: (currentUserData.balance || 0) + 1, // Teacher earns 1 TK per approval
                     history: newHistory 
                 });
 
@@ -418,6 +366,7 @@
             } catch (e) { showToast('Upload failed', 'error'); }
         }
 
+        // Class Link Logic
         function postClassLink() {
             const title = document.getElementById('classTitle').value;
             const url = document.getElementById('classUrl').value;
@@ -451,6 +400,7 @@
             });
         }
 
+        // History, Profile, Withdraw, Utils (Keep exact logic from user's code, adjusted for subadmins node)
         function loadHistory() {
             const c = document.getElementById('historyList'); const h = currentUserData.history || [];
             if (h.length === 0) { c.innerHTML = '<p class="text-gray-400 text-center py-8">No history yet</p>'; return; }
@@ -504,15 +454,7 @@
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebarOverlay').classList.toggle('show'); }
         function showSection(section) { document.querySelectorAll('.section').forEach(s => s.classList.add('hidden')); document.getElementById(section + 'Section').classList.remove('hidden'); document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active')); if(event && event.currentTarget) event.currentTarget.classList.add('active'); if (window.innerWidth < 768) toggleSidebar(); }
         function showToast(message, type = 'success') { const t = document.getElementById('toast'); const m = document.getElementById('toastMessage'); m.textContent = message; t.style.background = type === 'success' ? '#10b981' : '#ef4444'; t.classList.remove('translate-y-20', 'opacity-0'); t.classList.add('translate-y-0', 'opacity-100'); setTimeout(() => { t.classList.remove('translate-y-0', 'opacity-100'); t.classList.add('translate-y-20', 'opacity-0'); }, 3000); }
-        
-        // লগআউট ফাংশন
-        function logout() { 
-            auth.signOut().then(() => {
-                window.location.href = LOGIN_URL;
-            }).catch((error) => {
-                console.error(error);
-            });
-        }
+        function logout() { localStorage.clear(); window.location.href = '../sub-admin-login.html'; }
     </script>
 </body>
 </html>
