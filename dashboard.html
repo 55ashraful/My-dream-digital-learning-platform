@@ -284,19 +284,14 @@
         document.addEventListener('contextmenu', function(e) { e.preventDefault(); }); // ডান ক্লিক বন্ধ
         
         document.onkeydown = function(e) {
-            // F12 বন্ধ
-            if(e.keyCode == 123) return false;
-            // Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C বন্ধ (DevTools)
+            if(e.keyCode == 123) return false; // F12 বন্ধ
             if(e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0) || e.keyCode == 'C'.charCodeAt(0))) return false;
-            // Ctrl+U (View Source), Ctrl+S (Save), Ctrl+P (Print) বন্ধ
             if(e.ctrlKey && (e.keyCode == 'U'.charCodeAt(0) || e.keyCode == 'S'.charCodeAt(0) || e.keyCode == 'P'.charCodeAt(0))) return false;
         }
 
-        // কপি, কাট, পেস্ট বন্ধ করে দেওয়া হলো
         document.addEventListener('copy', function(e) { e.preventDefault(); });
         document.addEventListener('cut', function(e) { e.preventDefault(); });
         document.addEventListener('paste', function(e) { e.preventDefault(); });
-
 
         // ২. ফায়ারবেস কনফিগারেশন
         const firebaseConfig = {
@@ -314,21 +309,21 @@
         const IMGBB_API_KEY = '07bb6a485d95048a7add76d3207d44be';
         const BASE_URL = 'https://my-dream-digital-learning-platform.vercel.app/signup.html';
         
-        // ৩. পারমিশন রোল সিস্টেম (এই ১৮টি রোল ছাড়া কেউ ঢুকতে পারবে না)
+        // ৩. ১৮টি পারমিশন রোল
         const ALLOWED_ROLES = [
             "Counselor", "Senior Team Leader", "Team Leader", "Trainer", "Teacher", 
             "Account Manager", "Photo editing teacher", "Video editing teacher", 
             "Senior counselor", "Helpline", "Web developer", "Marketing team", 
             "Qualification team", "Senior teacher", "Senior Manager", 
-            "Counsellor Manager", "Marketing Manager", "Accounte", "Member", "User", "user" // সাধারণ ইউজারদের জন্য Member/User রাখা হয়েছে
+            "Counsellor Manager", "Marketing Manager", "Accounte"
         ];
 
         let currentUserData = {};
         let userId = null;
         let selectedWorkPhoto = null;
+        let dbPath = 'users'; // ডাটাবেস পাথ ট্র্যাক করার জন্য
 
         document.addEventListener('DOMContentLoaded', () => {
-            // রাউট প্রোটেকশন: লগইন ছাড়া ঢোকার চেষ্টা করলে লগইন পেজে নিয়ে যাবে
             if (localStorage.getItem('isLoggedIn') !== 'true' || !localStorage.getItem('userId')) {
                 window.location.href = '../login.html'; return;
             }
@@ -338,42 +333,64 @@
         });
 
         function loadUserData() {
+            // প্রথমে users টেবিলে খুঁজবে
             database.ref('users/' + userId).on('value', (snapshot) => {
                 if (snapshot.exists()) {
                     currentUserData = snapshot.val();
-                    
-                    // রোল চেকিং: ইউজারের রোল যদি ALLOWED_ROLES এর ভিতরে না থাকে, তবে বের করে দিবে
-                    const userRole = currentUserData.role || 'Member'; // যদি রোল সেট করা না থাকে, তাহলে 'Member' ধরবে
-                    if (!ALLOWED_ROLES.includes(userRole)) {
-                        showToast('Access Denied! Unauthorized Role.', 'error');
-                        setTimeout(() => { logout(); }, 1500);
-                        return;
-                    }
-
-                    currentUserData.balance = currentUserData.balance || 0;
-                    currentUserData.totalRefers = currentUserData.totalRefers || 0;
-                    currentUserData.tasksCompleted = currentUserData.tasksCompleted || 0;
-                    currentUserData.photosSubmitted = currentUserData.photosSubmitted || 0;
-                    currentUserData.totalWithdrawals = currentUserData.totalWithdrawals || 0;
-                    currentUserData.history = currentUserData.history || [];
-                    currentUserData.submissions = currentUserData.submissions || [];
-                    currentUserData.myReferralCode = currentUserData.myReferralCode || generateReferCode();
-                    currentUserData.dailyTasksCompleted = currentUserData.dailyTasksCompleted || [];
-                    initPageUI();
-                } else { logout(); }
+                    dbPath = 'users';
+                    processUserData();
+                } else {
+                    // যদি users এ না থাকে, তবে subadmins টেবিলে খুঁজবে (১৮টি রোলের জন্য)
+                    database.ref('subadmins/' + userId).on('value', (subSnapshot) => {
+                        if (subSnapshot.exists()) {
+                            currentUserData = subSnapshot.val();
+                            dbPath = 'subadmins';
+                            processUserData();
+                        } else {
+                            // দুই জায়গাতেই না থাকলে লগআউট করে দিবে
+                            logout();
+                        }
+                    });
+                }
             });
+        }
+
+        function processUserData() {
+            const userRole = currentUserData.role || 'User';
+            // সাধারণ ইউজার (User/Member) অথবা নির্দিষ্ট ১৮টি রোল হলে ঢুকতে দিবে
+            const isAllowed = (userRole === 'User' || userRole === 'Member' || userRole === 'user' || ALLOWED_ROLES.includes(userRole));
+            
+            if (!isAllowed) {
+                showToast('Access Denied! Unauthorized Role.', 'error');
+                setTimeout(() => { logout(); }, 1500);
+                return;
+            }
+
+            // ডাটাবেস থেকে আনা ডাটাগুলো যদি না থাকে, তবে ডিফল্ট ভ্যালু সেট করা
+            currentUserData.balance = currentUserData.balance || 0;
+            currentUserData.totalRefers = currentUserData.totalRefers || 0;
+            currentUserData.tasksCompleted = currentUserData.tasksCompleted || 0;
+            currentUserData.photosSubmitted = currentUserData.photosSubmitted || 0;
+            currentUserData.totalWithdrawals = currentUserData.totalWithdrawals || 0;
+            currentUserData.history = currentUserData.history || [];
+            currentUserData.submissions = currentUserData.submissions || [];
+            currentUserData.myReferralCode = currentUserData.myReferralCode || generateReferCode();
+            currentUserData.dailyTasksCompleted = currentUserData.dailyTasksCompleted || [];
+            
+            initPageUI();
         }
 
         function generateReferCode() { return 'MDD' + Math.random().toString(36).substring(2, 8).toUpperCase(); }
 
         function initPageUI() {
             const u = currentUserData;
-            const fullName = (u.firstName || '') + ' ' + (u.lastName || '');
+            // সাব-এডমিনদের নাম আলাদা ভাবে সেট করা (কারণ তাদের firstName নাও থাকতে পারে)
+            const fullName = ((u.firstName || '') + ' ' + (u.lastName || '')).trim() || u.email.split('@')[0];
             const displayRole = u.role || 'Member';
             
             document.getElementById('welcomeName').textContent = fullName;
             document.getElementById('sidebarName').textContent = fullName;
-            document.getElementById('sidebarRole').textContent = displayRole; // সাইডবারে রোল দেখাচ্ছে
+            document.getElementById('sidebarRole').textContent = displayRole; 
             document.getElementById('sidebarInitial').textContent = fullName.charAt(0).toUpperCase();
             
             if (u.photo) {
@@ -423,7 +440,7 @@
                 const res = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData });
                 const data = await res.json();
                 if (data.success) {
-                    database.ref('users/' + userId + '/photo').set(data.data.url);
+                    database.ref(dbPath + '/' + userId + '/photo').set(data.data.url);
                     document.getElementById('uploadStatus').textContent = 'Uploaded successfully!';
                     showToast('Photo updated!');
                 } else { throw new Error(); }
@@ -438,10 +455,10 @@
                 whatsapp: document.getElementById('profilePhone').value,
                 password: document.getElementById('profilePassword').value
             };
-            database.ref('users/' + userId).update(updates).then(() => showToast('Profile saved!')).catch(() => showToast('Failed to save', 'error'));
+            database.ref(dbPath + '/' + userId).update(updates).then(() => showToast('Profile saved!')).catch(() => showToast('Failed to save', 'error'));
         }
 
-        function deleteAccount() { if(confirm('Are you sure? Your account will be permanently deleted!')) { database.ref('users/' + userId).remove().then(() => { logout(); }); } }
+        function deleteAccount() { if(confirm('Are you sure? Your account will be permanently deleted!')) { database.ref(dbPath + '/' + userId).remove().then(() => { logout(); }); } }
 
         function copyReferCode() { navigator.clipboard.writeText(currentUserData.myReferralCode); showToast('Refer code copied!'); }
         function copyReferLink() { navigator.clipboard.writeText(`${BASE_URL}?ref=${currentUserData.myReferralCode}`); showToast('Refer link copied!'); }
@@ -485,13 +502,13 @@
             const newHistory = [ ...(currentUserData.history || []) ];
             newHistory.unshift({ title: `Withdraw via ${method}`, type: 'withdraw_pending', amount: amount, date: new Date().toLocaleDateString() });
             const updates = { balance: newBalance, totalWithdrawals: (currentUserData.totalWithdrawals || 0) + 1, history: newHistory };
-            database.ref('users/' + userId).update(updates).then(() => { document.getElementById('withdrawAccount').value = ''; document.getElementById('withdrawAmount').value = ''; showToast('Withdrawal request submitted!'); });
+            database.ref(dbPath + '/' + userId).update(updates).then(() => { document.getElementById('withdrawAccount').value = ''; document.getElementById('withdrawAmount').value = ''; showToast('Withdrawal request submitted!'); });
         }
 
         function loadTasks() {
             const c = document.getElementById('taskList');
             const today = new Date().toDateString();
-            if (currentUserData.lastTaskDate !== today) { database.ref('users/' + userId).update({ dailyTasksCompleted: [], lastTaskDate: today }); currentUserData.dailyTasksCompleted = []; }
+            if (currentUserData.lastTaskDate !== today) { database.ref(dbPath + '/' + userId).update({ dailyTasksCompleted: [], lastTaskDate: today }); currentUserData.dailyTasksCompleted = []; }
             const tasks = [ {id:1, title:'Watch Video Ad'}, {id:2, title:'Social Share'}, {id:3, title:'Daily Check-in'}, {id:4, title:'Survey'}, {id:5, title:'App Install'}, {id:6, title:'Refer Friend'}, {id:7, title:'Photo Task'}, {id:8, title:'Read Article'}, {id:9, title:'Play Game'}, {id:10, title:'Bonus Task'} ];
             c.innerHTML = tasks.map(t => {
                 const done = (currentUserData.dailyTasksCompleted || []).includes(t.id);
@@ -505,7 +522,7 @@
             const newHistory = [ ...(currentUserData.history || []) ];
             newHistory.unshift({ title: 'Daily Task Completed', type: 'task', amount: 2, date: new Date().toLocaleDateString() });
             const updates = { dailyTasksCompleted: newTasks, balance: (currentUserData.balance || 0) + 2, tasksCompleted: (currentUserData.tasksCompleted || 0) + 1, history: newHistory };
-            database.ref('users/' + userId).update(updates).then(() => showToast('Task completed! +2 TK'));
+            database.ref(dbPath + '/' + userId).update(updates).then(() => showToast('Task completed! +2 TK'));
         }
 
         function handleWorkPhoto(input) {
@@ -541,7 +558,8 @@
                         timestamp: Date.now(),
                         date: new Date().toLocaleDateString(),
                         status: 'pending',
-                        userId: userId
+                        userId: userId,
+                        userPath: dbPath // টিচার যেন বুঝতে পারে ইউজারটি কোন ফোল্ডারে আছে
                     });
 
                     const newSubmissions = [ ...(currentUserData.submissions || []) ];
@@ -560,7 +578,7 @@
                         history: newHistory
                     };
                     
-                    await database.ref('users/' + userId).update(updates);
+                    await database.ref(dbPath + '/' + userId).update(updates);
                     document.getElementById('photoTitle').value = '';
                     document.getElementById('selectedFileName').textContent = '';
                     selectedWorkPhoto = null;
