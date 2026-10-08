@@ -11,6 +11,9 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
+    <!-- Ad Script -->
+    <script src="https://pl31725660.profitableratecpmnetwork.com/a0/b3/1e/a0b31ea5209089f4f97a64eed6e686da.js"></script>
+
     <style>
         :root {
             --bg: #f8fafc; --bg-secondary: #ffffff; --card: #ffffff; --card-hover: #f1f5f9;
@@ -32,6 +35,7 @@
         .card:hover { border-color: var(--accent); box-shadow: 0 4px 20px var(--accent-glow), 0 1px 3px rgba(0,0,0,0.06); }
         .btn-primary { background: linear-gradient(135deg, var(--accent), #00a884); color: #ffffff; font-weight: 600; padding: 12px 24px; border-radius: 10px; transition: all 0.3s ease; border: none; cursor: pointer; }
         .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px var(--accent-glow); }
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
         .btn-secondary { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 10px 20px; border-radius: 10px; transition: all 0.3s ease; cursor: pointer; }
         .btn-secondary:hover { border-color: var(--accent); background: var(--card-hover); }
         .btn-danger { background: #ef4444; color: #fff; font-weight: 600; padding: 12px 24px; border-radius: 10px; transition: all 0.3s ease; border: none; cursor: pointer; width: 100%; }
@@ -67,6 +71,14 @@
         .notice-item { background: rgba(0, 184, 148, 0.05); border-left: 3px solid var(--accent); padding: 16px; border-radius: 0 10px 10px 0; margin-bottom: 12px; }
         img { pointer-events: none; }
         @media (max-width: 640px) { .balance-card { padding: 16px; } }
+
+        /* Ad Modal Styles */
+        .ad-modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(6px); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 16px; }
+        .ad-modal-overlay.show { display: flex; }
+        .ad-modal-box { background: var(--card); border-radius: 20px; max-width: 360px; width: 100%; padding: 28px 24px; text-align: center; animation: fadeInUp 0.3s ease; border: 1px solid var(--border); box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        .timer-ring { transform: rotate(-90deg); }
+        .pulse-dot { width: 10px; height: 10px; background: var(--danger); border-radius: 50%; display: inline-block; animation: pulse-anim 1s infinite; }
+        @keyframes pulse-anim { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.8); } }
     </style>
 </head>
 <body ondragstart="return false" onselectstart="return false" oncontextmenu="return false">
@@ -277,6 +289,31 @@
         </div>
     </main>
 
+    <!-- Ad Watch Modal -->
+    <div class="ad-modal-overlay" id="adModalOverlay">
+        <div class="ad-modal-box">
+            <div class="flex items-center justify-center gap-2 mb-1">
+                <span class="pulse-dot"></span>
+                <span class="text-sm font-semibold text-red-500">LIVE AD PLAYING</span>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800 mb-1">অ্যাড দেখুন</h3>
+            <p class="text-sm text-gray-500 mb-5">রিওয়ার্ড পেতে অ্যাডটি সম্পূর্ণ দেখুন। মাঝপথে বন্ধ করলে ব্যালেন্স পাবেন না!</p>
+            
+            <div class="relative w-28 h-28 mx-auto mb-5">
+                <svg class="w-28 h-28 timer-ring" viewBox="0 0 120 120">
+                    <circle cx="60" cy="60" r="54" fill="none" stroke="#e2e8f0" stroke-width="8"/>
+                    <circle id="progressRing" cx="60" cy="60" r="54" fill="none" stroke="#00b894" stroke-width="8" stroke-linecap="round" stroke-dasharray="339.29" stroke-dashoffset="0" style="transition: stroke-dashoffset 1s linear;"/>
+                </svg>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <span id="adTimer" class="text-3xl font-bold text-gray-800 font-display">30</span>
+                </div>
+            </div>
+
+            <button id="claimRewardBtn" class="btn-primary w-full mb-3" disabled onclick="claimTaskReward()">অ্যাড চলছে... অপেক্ষা করুন</button>
+            <button class="btn-secondary w-full text-sm" onclick="cancelAdModal()">বাতিল করুন (ব্যালেন্স পাবেন না)</button>
+        </div>
+    </div>
+
     <div id="toast" class="fixed bottom-4 right-4 bg-emerald-600 text-white px-6 py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50"><span id="toastMessage"></span></div>
 
     <script>
@@ -311,8 +348,14 @@
         let userId = null;
         let selectedWorkPhoto = null;
 
+        // অ্যাড সংক্রান্ত ভেরিয়েবল
+        let adInterval = null;
+        let pendingTaskId = null;
+        const AD_DURATION = 30;
+        const RING_LENGTH = 339.29;
+
         document.addEventListener('DOMContentLoaded', () => {
-            // লগইন ছাড়া ঢোকা বন্ধ
+            // লগইন ছাড়া ঢোকা বন্ধ
             if (localStorage.getItem('isLoggedIn') !== 'true' || !localStorage.getItem('userId')) {
                 window.location.href = '../login.html'; return;
             }
@@ -473,13 +516,78 @@
             }).join('');
         }
 
+        // ===== অ্যাড সিস্টেম (৩০ সেকেন্ড) =====
         function completeTask(taskId) {
+            // আগে করা থাকলে আর করবে না
             if ((currentUserData.dailyTasksCompleted || []).includes(taskId)) return;
+            // অ্যাড ইতিমধ্যে চলছে কিনা চেক
+            if (adInterval !== null) return;
+            
+            pendingTaskId = taskId;
+            openAdModal();
+        }
+
+        function openAdModal() {
+            const overlay = document.getElementById('adModalOverlay');
+            const timerEl = document.getElementById('adTimer');
+            const ring = document.getElementById('progressRing');
+            const claimBtn = document.getElementById('claimRewardBtn');
+            
+            overlay.classList.add('show');
+            
+            let timeLeft = AD_DURATION;
+            timerEl.textContent = timeLeft;
+            ring.style.strokeDashoffset = 0;
+            claimBtn.disabled = true;
+            claimBtn.textContent = '🔴 অ্যাড চলছে... ' + timeLeft + ' সেকেন্ড';
+            
+            adInterval = setInterval(() => {
+                timeLeft--;
+                timerEl.textContent = timeLeft;
+                ring.style.strokeDashoffset = RING_LENGTH * (1 - timeLeft / AD_DURATION);
+                claimBtn.textContent = '🔴 অ্যাড চলছে... ' + timeLeft + ' সেকেন্ড';
+                
+                if (timeLeft <= 0) {
+                    clearInterval(adInterval);
+                    adInterval = null;
+                    claimBtn.disabled = false;
+                    claimBtn.textContent = '✅ রিওয়ার্ড ক্লেইম করুন (+2 TK)';
+                    showToast('অ্যাড সম্পূর্ণ হয়েছে! এখন ক্লেইম করুন');
+                }
+            }, 1000);
+        }
+
+        function claimTaskReward() {
+            if (pendingTaskId === null) return;
+            if (adInterval !== null) return; // অ্যাড এখনও চলছে
+            
+            const taskId = pendingTaskId;
+            pendingTaskId = null;
+            closeAdModal(true);
+            
+            // অ্যাড সম্পূর্ণ দেখা হয়েছে — এখন টাস্ক সম্পূর্ণ ও ব্যালেন্স যোগ হবে
             const newTasks = [...(currentUserData.dailyTasksCompleted || []), taskId];
             const newHistory = [ ...(currentUserData.history || []) ];
-            newHistory.unshift({ title: 'Daily Task Completed', type: 'task', amount: 2, date: new Date().toLocaleDateString() });
+            newHistory.unshift({ title: 'Daily Task Completed (Ad Watched)', type: 'task', amount: 2, date: new Date().toLocaleDateString() });
             const updates = { dailyTasksCompleted: newTasks, balance: (currentUserData.balance || 0) + 2, tasksCompleted: (currentUserData.tasksCompleted || 0) + 1, history: newHistory };
             database.ref('users/' + userId).update(updates).then(() => showToast('Task completed! +2 TK'));
+        }
+
+        function cancelAdModal() {
+            // অ্যাড চলাকালীন বন্ধ করলে সতর্ক করা হবে
+            if (adInterval !== null) {
+                if (!confirm('আপনি এখনো অ্যাড সম্পূর্ণ দেখেননি!\n\nএখন বন্ধ করলে ব্যালেন্স যোগ হবে না।\nআপনি কি নিশ্চিত বন্ধ করতে চান?')) {
+                    return;
+                }
+            }
+            closeAdModal(false);
+            showToast('অ্যাড সম্পূর্ণ দেখেননি, ব্যালেন্স যোগ হয়নি!', 'error');
+        }
+
+        function closeAdModal(completed) {
+            if (adInterval) { clearInterval(adInterval); adInterval = null; }
+            document.getElementById('adModalOverlay').classList.remove('show');
+            if (!completed) pendingTaskId = null;
         }
 
         function handleWorkPhoto(input) {
