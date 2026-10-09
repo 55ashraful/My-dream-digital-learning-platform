@@ -119,48 +119,6 @@
         let userCompletedTasks = {};
         let availableTasksList = []; 
 
-        // ================================================================
-        //  ⭐ লোডিং ট্র্যাকিং (চিরকাল "Loading..." ঝুলে থাকা ঠেকাতে) ⭐
-        // ================================================================
-        const TASK_FOLDERS = [
-            'tasks', 'quran_learning_tasks', 'pen_pencil_packing_tasks', 'video_watching_tasks',
-            'graphic_design_tasks', 'social_marketing_tasks', 'facebook_marketing_tasks', 'web_development_tasks'
-        ];
-        let respondedListeners = 0;
-        let loadingDone = false;
-        let errorShown = false;
-
-        function markListenerResponded() {
-            respondedListeners++;
-            if (!loadingDone && respondedListeners >= TASK_FOLDERS.length) {
-                finishLoading();
-            }
-        }
-
-        function finishLoading() {
-            loadingDone = true;
-            const container = document.getElementById('tasks-list');
-            // সব লিসেনার রেসপন্স দিয়েছে কিন্তু কোনো টাস্ক নেই
-            if (availableTasksList.length === 0 && !errorShown) {
-                container.innerHTML = '<div class="card p-8 text-center text-gray-400">No classes available right now.</div>';
-            }
-        }
-
-        // এরর হলে আসল কারণ দেখাবে (Rules এ পারমিশন নাই ইত্যাদি)
-        function handleListenerError(source, error) {
-            console.error('Firebase read error (' + source + '):', error.message);
-            if (!errorShown) {
-                errorShown = true;
-                let hint = '';
-                if (error.message.includes('permission_denied') || error.message.includes('Permission denied')) {
-                    hint = '<p class="text-sm text-red-500 mt-2">Firebase Rules এ "<b>' + source + '</b>" ফোল্ডারের read permission যোগ করুন।</p>';
-                }
-                document.getElementById('tasks-list').innerHTML =
-                    '<div class="card p-8 text-center"><p class="text-gray-800 font-semibold">⚠️ Failed to load classes</p><p class="text-sm text-gray-500 mt-1">' + error.message + '</p>' + hint + '</div>';
-            }
-        }
-        // ================================================================
-
         // --- Initialization ---
         function initClassApp() {
             if (!currentUserId) return;
@@ -177,30 +135,14 @@
         }
 
         function listenForPublicTasks() {
-            // ⭐ প্রতিটা লিসেনারে এরর হ্যান্ডলার যোগ হয়েছে — পারমিশন সমস্যায় আর চুপ থাকবে না
-            TASK_FOLDERS.forEach(source => {
-                database.ref(source).on('value',
-                    (snapshot) => {
-                        processTasks(snapshot, source);
-                        markListenerResponded();
-                    },
-                    (error) => {
-                        handleListenerError(source, error);
-                        markListenerResponded();
-                    }
-                );
-            });
-
-            // ⭐ সেফটি টাইমআউট: ১০ সেকেন্ডেও রেসপন্স না এলে লোডিং বন্ধ করা
-            setTimeout(() => {
-                if (!loadingDone) {
-                    loadingDone = true;
-                    if (availableTasksList.length === 0 && !errorShown) {
-                        document.getElementById('tasks-list').innerHTML =
-                            '<div class="card p-8 text-center"><p class="text-gray-800 font-semibold">⚠️ Loading is taking too long</p><p class="text-sm text-gray-500 mt-1">ইন্টারনেট সংযোগ ও Firebase Rules চেক করুন, তারপর পেজ রিফ্রেশ করুন।</p></div>';
-                    }
-                }
-            }, 10000);
+            database.ref('tasks').on('value', (snapshot) => processTasks(snapshot, 'tasks'));
+            database.ref('quran_learning_tasks').on('value', (snapshot) => processTasks(snapshot, 'quran_learning_tasks'));
+            database.ref('pen_pencil_packing_tasks').on('value', (snapshot) => processTasks(snapshot, 'pen_pencil_packing_tasks'));
+            database.ref('video_watching_tasks').on('value', (snapshot) => processTasks(snapshot, 'video_watching_tasks'));
+            database.ref('graphic_design_tasks').on('value', (snapshot) => processTasks(snapshot, 'graphic_design_tasks'));
+            database.ref('social_marketing_tasks').on('value', (snapshot) => processTasks(snapshot, 'social_marketing_tasks'));
+            database.ref('facebook_marketing_tasks').on('value', (snapshot) => processTasks(snapshot, 'facebook_marketing_tasks'));
+            database.ref('web_development_tasks').on('value', (snapshot) => processTasks(snapshot, 'web_development_tasks'));
         }
 
         function processTasks(snapshot, source) {
@@ -218,16 +160,11 @@
 
         // --- Rendering Tasks ---
         function renderTasks() {
-            // ⭐ সব লিসেনার রেসপন্স দেওয়ার আগে খালি লিস্টে "No classes" দেখাবে না (লোডিং থাকবে)
-            if (availableTasksList.length === 0 && !loadingDone) return;
-
             const container = document.getElementById('tasks-list');
             container.innerHTML = '';
 
             if (availableTasksList.length === 0) {
-                if (!errorShown) {
-                    container.innerHTML = '<div class="card p-8 text-center text-gray-400">No classes available right now.</div>';
-                }
+                container.innerHTML = '<div class="card p-8 text-center text-gray-400">No classes available right now.</div>';
                 return;
             }
             
