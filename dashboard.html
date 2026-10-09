@@ -633,10 +633,11 @@
         // ================================================================
 
         // ================================================================
-        //  ⭐ ফটো সাবমিশন ফিক্স (নতুন সিস্টেম) ⭐
-        //  ১. ছবি অটো কমপ্রেস হবে (বড় ছবি ছোট করে — আপলোড সফল হবে)
-        //  ২. imgbb ব্যর্থ হলে Firebase এ base64 হিসেবে সেভ (ব্যাকআপ)
-        //  ৩. আসল এরর মেসেজ দেখাবে
+        //  ⭐ ফটো সাবমিশন সিস্টেম (PERMISSION_DENIED ফিক্স) ⭐
+        //  ১. ছবি অটো কমপ্রেস হবে
+        //  ২. imgbb ব্যর্থ হলে base64 ব্যাকআপ
+        //  ৩. আগে ইউজারের নিজের ফোল্ডারে সেভ (সবসময় কাজ করে)
+        //  ৪. তারপর অ্যাডমিনের জন্য গ্লোবাল সেভ (রুলস ঠিক থাকলে)
         // ================================================================
 
         // ছবি কমপ্রেস করার ফাংশন
@@ -698,12 +699,7 @@
             try {
                 // ===== ধাপ ১: ছবি কমপ্রেস করা =====
                 showToast('Compressing photo...', 'success');
-                let compressed;
-                try {
-                    compressed = await compressImage(selectedWorkPhoto, 1000, 0.7);
-                } catch (compressErr) {
-                    throw new Error('Photo compression failed: ' + compressErr.message);
-                }
+                const compressed = await compressImage(selectedWorkPhoto, 1000, 0.7);
 
                 // ===== ধাপ ২: imgbb তে আপলোডের চেষ্টা =====
                 showToast('Uploading photo...', 'success');
@@ -713,38 +709,27 @@
                     formData.append('key', IMGBB_API_KEY);
                     
                     const res = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData });
-                    
-                    // imgbb যদি JSON ছাড়া কিছু দেয় (এরর পেজ), সেটাও ধরা হবে
                     let data;
-                    try {
-                        data = await res.json();
-                    } catch (parseErr) {
-                        throw new Error('imgbb returned invalid response (HTTP ' + res.status + ')');
-                    }
+                    try { data = await res.json(); } catch (parseErr) { throw new Error('imgbb invalid response'); }
                     
                     if (data && data.success && data.data && data.data.url) {
                         photoData = data.data.url;
                         uploadMethod = 'imgbb';
                     } else {
-                        throw new Error('imgbb rejected: ' + (data && data.error && data.error.message ? data.error.message : 'Unknown error'));
+                        throw new Error('imgbb rejected');
                     }
                 } catch (imgbbErr) {
-                    console.warn('imgbb failed:', imgbbErr.message);
-                    
-                    // ===== ধাপ ৩ (ব্যাকআপ): Firebase এ base64 হিসেবে সেভ =====
-                    showToast('Using backup upload (Firebase)...', 'success');
-                    
-                    // আরও ছোট করে কমপ্রেস (Firebase সাইজ কম রাখতে)
-                    const smallCompressed = await compressImage(selectedWorkPhoto, 700, 0.55);
-                    photoData = await blobToBase64(smallCompressed);
-                    uploadMethod = 'firebase-base64';
+                    // ===== ধাপ ৩ (ব্যাকআপ): base64 হিসেবে সেভ =====
+                    console.warn('imgbb failed, using base64 backup:', imgbbErr.message);
+                    showToast('Using backup upload...', 'success');
+                    const small = await compressImage(selectedWorkPhoto, 500, 0.5);
+                    photoData = await blobToBase64(small);
+                    uploadMethod = 'base64';
                 }
 
-                // ===== ধাপ ৪: ডাটাবেসে সেভ =====
-                // ১. টিচার ড্যাশবোর্ডের জন্য গ্লোবাল photo_submissions এ সেভ
-                const globalSubRef = database.ref('photo_submissions').push();
-                const globalSubId = globalSubRef.key;
-                await globalSubRef.set({
+                // সাবমিশন অবজেক্ট তৈরি
+                const globalSubId = database.ref('photo_submissions').push().key;
+                const submissionObj = {
                     subId: globalSubId,
                     title: title,
                     photo: photoData,
@@ -753,16 +738,10 @@
                     date: new Date().toLocaleDateString(),
                     status: 'pending',
                     userId: userId
-                });
+                };
 
-                // ২. ইউজারের নিজস্ব ফোল্ডারে সেভ
-                const newSubmissions = [ ...(currentUserData.submissions || []) ];
-                newSubmissions.unshift({
-                    subId: globalSubId,
-                    title: title, photo: photoData, uploadMethod: uploadMethod, timestamp: Date.now(),
-                    date: new Date().toLocaleDateString(), status: 'pending'
-                });
-                
+                // ===== ধাপ ৪: আগে ইউজারের নিজের ফোল্ডারে সেভ (এটা সবসময় কাজ করে) =====
+                const newSubmissions = [ { ...submissionObj }, ...(currentUserData.submissions || []) ];
                 const newHistory = [ ...(currentUserData.history || []) ];
                 newHistory.unshift({ title: `Photo Submitted: ${title}`, type: 'photo', amount: 2, date: new Date().toLocaleDateString() });
 
@@ -771,13 +750,29 @@
                     photosSubmitted: (currentUserData.photosSubmitted || 0) + 1,
                     history: newHistory
                 };
-                
                 await database.ref('users/' + userId).update(updates);
-                
+
+                // ===== ধাপ ৫: অ্যাডমিন ড্যাশবোর্ডের জন্য গ্লোবাল photo_submissions এ সেভ =====
+                // ⚠️ এটা কাজ করতে Firebase Rules এ photo_submissions এর write permission থাকতে হবে
+                let globalOk = true;
+                try {
+                    await database.ref('photo_submissions/' + globalSubId).set(submissionObj);
+                } catch (globalErr) {
+                    globalOk = false;
+                    console.warn('Global submission save failed (Firebase Rules আপডেট করুন):', globalErr.message);
+                }
+
+                // ফর্ম রিসেট
                 document.getElementById('photoTitle').value = '';
                 document.getElementById('selectedFileName').textContent = '';
                 selectedWorkPhoto = null;
-                showToast('Photo submitted successfully! Pending admin approval.');
+                
+                if (globalOk) {
+                    showToast('Photo submitted successfully! Pending admin approval.');
+                } else {
+                    // ইউজারের সাবমিশন সেভ হয়েছে, শুধু অ্যাডমিন কপি যায়নি — রুলস ঠিক করলেই হবে
+                    showToast('Photo saved! (Admin copy failed - update Firebase Rules)', 'error');
+                }
             } catch (e) {
                 // আসল এরর মেসেজ দেখানো — কেন ফেইল হলো বোঝা যাবে
                 console.error('Submit photo error:', e);
