@@ -275,7 +275,7 @@
                             </label>
                             <p id="selectedFileName" class="text-sm text-gray-500 mt-2"></p>
                         </div>
-                        <button class="btn-primary w-full" onclick="submitPhotoWork()">Submit Photo</button>
+                        <button class="btn-primary w-full" id="submitPhotoBtn" onclick="submitPhotoWork()">Submit Photo</button>
                     </div>
                 </div>
                 <div class="card p-5 animate-fadeInUp stagger-3">
@@ -632,10 +632,51 @@
         }
         // ================================================================
 
-        function handleWorkPhoto(input) {
-            if (!input.files || !input.files[0]) return;
-            selectedWorkPhoto = input.files[0];
-            document.getElementById('selectedFileName').textContent = selectedWorkPhoto.name;
+        // ================================================================
+        //  ⭐ ফটো সাবমিশন ফিক্স (নতুন সিস্টেম) ⭐
+        //  ১. ছবি অটো কমপ্রেস হবে (বড় ছবি ছোট করে — আপলোড সফল হবে)
+        //  ২. imgbb ব্যর্থ হলে Firebase এ base64 হিসেবে সেভ (ব্যাকআপ)
+        //  ৩. আসল এরর মেসেজ দেখাবে
+        // ================================================================
+
+        // ছবি কমপ্রেস করার ফাংশন
+        function compressImage(file, maxWidth, quality) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width, height = img.height;
+                        if (width > maxWidth) {
+                            height = Math.round((height * maxWidth) / width);
+                            width = maxWidth;
+                        }
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        canvas.toBlob((blob) => {
+                            if (blob) resolve(blob);
+                            else reject(new Error('Image compression failed'));
+                        }, 'image/jpeg', quality);
+                    };
+                    img.onerror = () => reject(new Error('Image could not be read'));
+                    img.src = e.target.result;
+                };
+                reader.onerror = () => reject(new Error('File could not be read'));
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // ছবিকে base64 এ রূপান্তর (Firebase ব্যাকআপের জন্য)
+        function blobToBase64(blob) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.onerror = () => reject(new Error('Base64 conversion failed'));
+                reader.readAsDataURL(blob);
+            });
         }
 
         async function submitPhotoWork() {
@@ -646,53 +687,112 @@
             const todaySubmissions = (currentUserData.submissions || []).filter(s => new Date(s.timestamp).toDateString() === today);
             if (todaySubmissions.length >= 2) { showToast('Daily limit reached (2 photos)', 'error'); return; }
 
-            const formData = new FormData(); formData.append('image', selectedWorkPhoto); formData.append('key', IMGBB_API_KEY);
-            showToast('Uploading photo...', 'success');
+            // আপলোড চলাকালীন বাটন বন্ধ রাখা (ডাবল ক্লিক ঠেকাতে)
+            const submitBtn = document.getElementById('submitPhotoBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Processing... Please wait';
+            
+            let photoData = null;
+            let uploadMethod = '';
 
             try {
-                const res = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData });
-                const data = await res.json();
+                // ===== ধাপ ১: ছবি কমপ্রেস করা =====
+                showToast('Compressing photo...', 'success');
+                let compressed;
+                try {
+                    compressed = await compressImage(selectedWorkPhoto, 1000, 0.7);
+                } catch (compressErr) {
+                    throw new Error('Photo compression failed: ' + compressErr.message);
+                }
+
+                // ===== ধাপ ২: imgbb তে আপলোডের চেষ্টা =====
+                showToast('Uploading photo...', 'success');
+                try {
+                    const formData = new FormData();
+                    formData.append('image', compressed, 'photo.jpg');
+                    formData.append('key', IMGBB_API_KEY);
+                    
+                    const res = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData });
+                    
+                    // imgbb যদি JSON ছাড়া কিছু দেয় (এরর পেজ), সেটাও ধরা হবে
+                    let data;
+                    try {
+                        data = await res.json();
+                    } catch (parseErr) {
+                        throw new Error('imgbb returned invalid response (HTTP ' + res.status + ')');
+                    }
+                    
+                    if (data && data.success && data.data && data.data.url) {
+                        photoData = data.data.url;
+                        uploadMethod = 'imgbb';
+                    } else {
+                        throw new Error('imgbb rejected: ' + (data && data.error && data.error.message ? data.error.message : 'Unknown error'));
+                    }
+                } catch (imgbbErr) {
+                    console.warn('imgbb failed:', imgbbErr.message);
+                    
+                    // ===== ধাপ ৩ (ব্যাকআপ): Firebase এ base64 হিসেবে সেভ =====
+                    showToast('Using backup upload (Firebase)...', 'success');
+                    
+                    // আরও ছোট করে কমপ্রেস (Firebase সাইজ কম রাখতে)
+                    const smallCompressed = await compressImage(selectedWorkPhoto, 700, 0.55);
+                    photoData = await blobToBase64(smallCompressed);
+                    uploadMethod = 'firebase-base64';
+                }
+
+                // ===== ধাপ ৪: ডাটাবেসে সেভ =====
+                // ১. টিচার ড্যাশবোর্ডের জন্য গ্লোবাল photo_submissions এ সেভ
+                const globalSubRef = database.ref('photo_submissions').push();
+                const globalSubId = globalSubRef.key;
+                await globalSubRef.set({
+                    subId: globalSubId,
+                    title: title,
+                    photo: photoData,
+                    uploadMethod: uploadMethod,
+                    timestamp: Date.now(),
+                    date: new Date().toLocaleDateString(),
+                    status: 'pending',
+                    userId: userId
+                });
+
+                // ২. ইউজারের নিজস্ব ফোল্ডারে সেভ
+                const newSubmissions = [ ...(currentUserData.submissions || []) ];
+                newSubmissions.unshift({
+                    subId: globalSubId,
+                    title: title, photo: photoData, uploadMethod: uploadMethod, timestamp: Date.now(),
+                    date: new Date().toLocaleDateString(), status: 'pending'
+                });
                 
-                if (data.success) {
-                    const photoUrl = data.data.url;
+                const newHistory = [ ...(currentUserData.history || []) ];
+                newHistory.unshift({ title: `Photo Submitted: ${title}`, type: 'photo', amount: 2, date: new Date().toLocaleDateString() });
 
-                    // ১. টিচার ড্যাশবোর্ডের জন্য গ্লোবাল photo_submissions এ সেভ
-                    const globalSubRef = database.ref('photo_submissions').push();
-                    const globalSubId = globalSubRef.key;
-                    await globalSubRef.set({
-                        subId: globalSubId,
-                        title: title,
-                        photo: photoUrl,
-                        timestamp: Date.now(),
-                        date: new Date().toLocaleDateString(),
-                        status: 'pending',
-                        userId: userId
-                    });
+                const updates = {
+                    submissions: newSubmissions,
+                    photosSubmitted: (currentUserData.photosSubmitted || 0) + 1,
+                    history: newHistory
+                };
+                
+                await database.ref('users/' + userId).update(updates);
+                
+                document.getElementById('photoTitle').value = '';
+                document.getElementById('selectedFileName').textContent = '';
+                selectedWorkPhoto = null;
+                showToast('Photo submitted successfully! Pending admin approval.');
+            } catch (e) {
+                // আসল এরর মেসেজ দেখানো — কেন ফেইল হলো বোঝা যাবে
+                console.error('Submit photo error:', e);
+                showToast('Upload failed: ' + e.message, 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit Photo';
+            }
+        }
+        // ================================================================
 
-                    // ২. ইউজারের নিজস্ব ফোল্ডারে সেভ
-                    const newSubmissions = [ ...(currentUserData.submissions || []) ];
-                    newSubmissions.unshift({
-                        subId: globalSubId,
-                        title: title, photo: photoUrl, timestamp: Date.now(),
-                        date: new Date().toLocaleDateString(), status: 'pending'
-                    });
-                    
-                    const newHistory = [ ...(currentUserData.history || []) ];
-                    newHistory.unshift({ title: `Photo Submitted: ${title}`, type: 'photo', amount: 2, date: new Date().toLocaleDateString() });
-
-                    const updates = {
-                        submissions: newSubmissions,
-                        photosSubmitted: (currentUserData.photosSubmitted || 0) + 1,
-                        history: newHistory
-                    };
-                    
-                    await database.ref('users/' + userId).update(updates);
-                    document.getElementById('photoTitle').value = '';
-                    document.getElementById('selectedFileName').textContent = '';
-                    selectedWorkPhoto = null;
-                    showToast('Photo submitted! Pending admin approval.');
-                } else { throw new Error(); }
-            } catch (e) { showToast('Upload failed', 'error'); }
+        function handleWorkPhoto(input) {
+            if (!input.files || !input.files[0]) return;
+            selectedWorkPhoto = input.files[0];
+            document.getElementById('selectedFileName').textContent = selectedWorkPhoto.name;
         }
 
         function loadSubmissions() {
