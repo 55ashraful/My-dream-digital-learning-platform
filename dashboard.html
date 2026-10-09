@@ -232,7 +232,11 @@
             <!-- Withdraw Section -->
             <section id="withdrawSection" class="section hidden">
                 <h2 class="text-2xl font-bold mb-6 animate-fadeInUp text-gray-800">Withdraw</h2>
-                <div class="notice-item mb-6 animate-fadeInUp stagger-1"><p class="font-semibold text-emerald-600">Important Notice</p><p class="text-sm text-gray-600 mt-1">Minimum withdrawal amount: 50 TK.</p></div>
+                <div class="notice-item mb-6 animate-fadeInUp stagger-1">
+                    <p class="font-semibold text-emerald-600">Important Notice</p>
+                    <p class="text-sm text-gray-600 mt-1">Minimum withdrawal amount: 50 TK.</p>
+                    <p class="text-sm text-gray-600 mt-1">You must keep at least 10 TK in your balance after withdrawal.</p>
+                </div>
                 <div class="card p-5 mb-6 animate-fadeInUp stagger-2">
                     <h3 class="text-lg font-semibold mb-4 text-gray-800">Request Withdrawal</h3>
                     <div class="space-y-4">
@@ -347,8 +351,11 @@
             10: ''  // বাটন ১০ (Bonus Task)
         };
 
-        // ⭐ কত সেকেন্ড অ্যাড দেখতে হবে (এক মিনিট = ৬০, বদলাতে চাইলে এখানে বদলান)
+        // ⭐ কত সেকেন্ড অ্যাড দেখতে হবে (এক মিনিট = ৬০)
         const AD_DURATION = 60;
+
+        // ⭐ উইথড্রয়ের পর ব্যালেন্সে কমপক্ষে যত টাকা থাকতে হবে
+        const MIN_BALANCE_AFTER_WITHDRAW = 10;
 
         const PENDING_KEY = 'pendingAdTask';
         let pendingAdChecked = false;
@@ -501,6 +508,8 @@
             if (!method || !account || !amount) { showToast('Please fill all fields', 'error'); return; }
             if (amount < 50) { showToast('Minimum withdrawal is 50 TK', 'error'); return; }
             if (currentUserData.balance < amount) { showToast('Insufficient balance', 'error'); return; }
+            // ⭐ নতুন রুল: উইথড্রয়ের পর ব্যালেন্সে কমপক্ষে ১০ টাকা থাকতে হবে
+            if ((currentUserData.balance - amount) < MIN_BALANCE_AFTER_WITHDRAW) { showToast('You must keep at least 10 TK in your balance after withdrawal', 'error'); return; }
             const newBalance = currentUserData.balance - amount;
             const newHistory = [ ...(currentUserData.history || []) ];
             newHistory.unshift({ title: `Withdraw via ${method}`, type: 'withdraw_pending', amount: amount, date: new Date().toLocaleDateString() });
