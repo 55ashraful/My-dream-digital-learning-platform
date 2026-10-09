@@ -72,10 +72,7 @@
         /* ===== অ্যাড মোডাল স্টাইল ===== */
         .ad-modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(6px); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 16px; }
         .ad-modal-overlay.show { display: flex; }
-        .ad-modal-box { background: var(--card); border-radius: 20px; max-width: 380px; width: 100%; max-height: 94vh; overflow-y: auto; padding: 24px 20px; text-align: center; animation: fadeInUp 0.3s ease; border: 1px solid var(--border); box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
-        .ad-viewer { position: relative; background: #f8fafc; border: 2px dashed var(--accent); border-radius: 12px; min-height: 260px; overflow: hidden; margin-bottom: 16px; }
-        .ad-viewer iframe { width: 100%; min-height: 256px; border: none; display: block; }
-        .ad-loading { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: #94a3b8; font-size: 14px; background: #f8fafc; pointer-events: none; }
+        .ad-modal-box { background: var(--card); border-radius: 20px; max-width: 380px; width: 100%; max-height: 94vh; overflow-y: auto; padding: 28px 24px; text-align: center; animation: fadeInUp 0.3s ease; border: 1px solid var(--border); box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
         .pulse-dot { width: 10px; height: 10px; background: var(--danger); border-radius: 50%; display: inline-block; animation: pulse-anim 1s infinite; }
         @keyframes pulse-anim { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.8); } }
         .timer-ring { transform: rotate(-90deg); }
@@ -289,57 +286,21 @@
         </div>
     </main>
 
-    <!-- ================================================================
-         অ্যাড কোড বসানোর জায়গা (এখান থেকে কনফিগার করুন)
-         নিয়ম: Adsterra থেকে কপি করা সম্পূর্ণ কোড (script + container div)
-         পেস্ট করুন নিচের বক্সের ভিতরে। iframe সিস্টেম নিজেই অ্যাড দেখাবে।
-    ================================================================= -->
-
-    <!-- ডিফল্ট অ্যাড: যে বাটনের আলাদা কোড নেই, সবখানে এটা দেখাবে -->
-    <textarea id="adCodeDefault" style="display:none;"><script async="async" data-cfasync="false" src="https://pl31727032.profitableratecpmnetwork.com/e4ecf38389bf19e887eea8a3c8088417/invoke.js"></script>
-<div id="container-e4ecf38389bf19e887eea8a3c8088417"></div></textarea>
-
-    <!-- বাটন ১ (Watch Video Ad) — আলাদা অ্যাড চাইলে এই বক্সে কোড পেস্ট করুন -->
-    <textarea id="adCodeTask1" style="display:none;"></textarea>
-    <!-- বাটন ২ (Social Share) -->
-    <textarea id="adCodeTask2" style="display:none;"></textarea>
-    <!-- বাটন ৩ (Daily Check-in) -->
-    <textarea id="adCodeTask3" style="display:none;"></textarea>
-    <!-- বাটন ৪ (Survey) -->
-    <textarea id="adCodeTask4" style="display:none;"></textarea>
-    <!-- বাটন ৫ (App Install) -->
-    <textarea id="adCodeTask5" style="display:none;"></textarea>
-    <!-- বাটন ৬ (Refer Friend) -->
-    <textarea id="adCodeTask6" style="display:none;"></textarea>
-    <!-- বাটন ৭ (Photo Task) -->
-    <textarea id="adCodeTask7" style="display:none;"></textarea>
-    <!-- বাটন ৮ (Read Article) -->
-    <textarea id="adCodeTask8" style="display:none;"></textarea>
-    <!-- বাটন ৯ (Play Game) -->
-    <textarea id="adCodeTask9" style="display:none;"></textarea>
-    <!-- বাটন ১০ (Bonus Task) -->
-    <textarea id="adCodeTask10" style="display:none;"></textarea>
-
-    <!-- ===== অ্যাড দেখার মোডাল ===== -->
+    <!-- ===== অ্যাড দেখার কাউন্টডাউন মোডাল ===== -->
     <div class="ad-modal-overlay" id="adModalOverlay">
         <div class="ad-modal-box">
             <div class="flex items-center justify-center gap-2 mb-1">
                 <span class="pulse-dot"></span>
-                <span class="text-sm font-semibold text-red-500">LIVE AD PLAYING</span>
+                <span class="text-sm font-semibold text-red-500">AD IS PLAYING</span>
             </div>
-            <h3 class="text-xl font-bold text-gray-800 mb-1">অ্যাড দেখুন</h3>
-            <p class="text-sm text-gray-500 mb-4">রিওয়ার্ড পেতে ৩০ সেকেন্ড সম্পূর্ণ অ্যাড দেখুন!</p>
-            
-            <!-- এই বক্সের ভিতরে iframe এর মাধ্যমে আসল অ্যাড দেখাবে -->
-            <div id="adContainer" class="ad-viewer">
-                <div id="adLoadingLabel" class="ad-loading">
-                    <span class="pulse-dot"></span>
-                    <span id="adLoadingText">অ্যাড লোড হচ্ছে...</span>
-                </div>
+            <h3 class="text-xl font-bold text-gray-800 mb-2">অ্যাড দেখুন</h3>
+            <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-3 mb-4">
+                <p class="text-sm text-emerald-800 font-semibold">✅ অ্যাডটি নতুন ট্যাবে খোলা হয়েছে!</p>
+                <p class="text-xs text-gray-600 mt-1">নতুন ট্যাবে গিয়ে অ্যাডটি দেখুন। এই পেজে ৩০ সেকেন্ড কাউন্টডাউন চলবে। সম্পূর্ণ হলে রিওয়ার্ড ক্লেইম করতে পারবেন।</p>
             </div>
 
-            <div class="relative w-24 h-24 mx-auto mb-4">
-                <svg class="w-24 h-24 timer-ring" viewBox="0 0 120 120">
+            <div class="relative w-28 h-28 mx-auto mb-4">
+                <svg class="w-28 h-28 timer-ring" viewBox="0 0 120 120">
                     <circle cx="60" cy="60" r="54" fill="none" stroke="#e2e8f0" stroke-width="8"/>
                     <circle id="progressRing" cx="60" cy="60" r="54" fill="none" stroke="#00b894" stroke-width="8" stroke-linecap="round" stroke-dasharray="339.29" stroke-dashoffset="0" style="transition: stroke-dashoffset 1s linear;"/>
                 </svg>
@@ -387,11 +348,33 @@
         let userId = null;
         let selectedWorkPhoto = null;
 
-        // ===== অ্যাড সেটিংস =====
+        // ================================================================
+        //  ⭐ অ্যাড লিংক সেটিংস (এখানেই বদলাবেন) ⭐
+        // ================================================================
+        
+        // এই লিংকটা সব বাটনে কাজ করবে (ডিফল্ট)
+        const DEFAULT_AD_LINK = 'https://www.profitableratecpmnetwork.com/a4qbuw4c5q?key=ae1e704c64652992571491f059fbd4ed';
+
+        // কোনো নির্দিষ্ট বাটনে আলাদা অ্যাড লিংক দিতে চাইলে এখানে বসান
+        // খালি ('') রাখলে সেই বাটনে উপরের ডিফল্ট লিংকটাই দেখাবে
+        const TASK_AD_LINKS = {
+            1: '',  // বাটন ১ (Watch Video Ad)
+            2: '',  // বাটন ২ (Social Share)
+            3: '',  // বাটন ৩ (Daily Check-in)
+            4: '',  // বাটন ৪ (Survey)
+            5: '',  // বাটন ৫ (App Install)
+            6: '',  // বাটন ৬ (Refer Friend)
+            7: '',  // বাটন ৭ (Photo Task)
+            8: '',  // বাটন ৮ (Read Article)
+            9: '',  // বাটন ৯ (Play Game)
+            10: ''  // বাটন ১০ (Bonus Task)
+        };
+
         const AD_DURATION = 30; // ৩০ সেকেন্ড
         const RING_LENGTH = 339.29;
         let adInterval = null;
         let pendingTaskId = null;
+        // ================================================================
 
         document.addEventListener('DOMContentLoaded', () => {
             // লগইন ছাড়া ঢোকা বন্ধ
@@ -556,31 +539,36 @@
         }
 
         // ================================================================
-        //  অ্যাড সিস্টেম (iframe document.write পদ্ধতি — Adsterra কোড এভাবেই কাজ করে)
+        //  অ্যাড সিস্টেম (Direct Link → নতুন ট্যাবে অ্যাড + ৩০ সেকেন্ড কাউন্টডাউন)
         // ================================================================
 
-        // Start বাটনে ক্লিক → মোডাল + অ্যাড + টাইমার
+        // কোন বাটনের কোন লিংক যাবে তা ঠিক করে
+        function getAdLink(taskId) {
+            const link = TASK_AD_LINKS[taskId];
+            return (link && link.trim() !== '') ? link : DEFAULT_AD_LINK;
+        }
+
+        // Start বাটনে ক্লিক → অ্যাড লিংক নতুন ট্যাবে খুলবে + কাউন্টডাউন মোডাল
         function completeTask(taskId) {
             if ((currentUserData.dailyTasksCompleted || []).includes(taskId)) return;
-            if (adInterval !== null) return;
+            if (adInterval !== null) return; // ইতিমধ্যে অ্যাড চলছে
+            
+            // ⭐ ইউজারের ক্লিকের মুহূর্তেই অ্যাড লিংক খুলতে হবে (পপআপ ব্লক এড়াতে)
+            const adWindow = window.open(getAdLink(taskId), '_blank');
+            
+            if (!adWindow) {
+                // ব্রাউজার পপআপ ব্লক করেছে
+                showToast('পপআপ ব্লক হয়েছে! ব্রাউজার সেটিংসে পপআপ অনুমোদন করুন', 'error');
+                return;
+            }
+            
             pendingTaskId = taskId;
-            openAdModal(taskId);
+            openAdModal();
         }
 
-        // কোন বাটনের কোন অ্যাড দেখাবে তা ঠিক করে (আলাদা কোড না থাকলে ডিফল্ট)
-        function getAdCode(taskId) {
-            const specific = document.getElementById('adCodeTask' + taskId);
-            if (specific && specific.value.trim() !== '') return specific.value;
-            return document.getElementById('adCodeDefault').value;
-        }
-
-        function openAdModal(taskId) {
+        function openAdModal() {
             document.getElementById('adModalOverlay').classList.add('show');
             
-            // আসল অ্যাড iframe এর ভিতরে লোড হবে
-            renderAdInIframe(getAdCode(taskId));
-            
-            // টাইমার শুরু
             const timerEl = document.getElementById('adTimer');
             const ring = document.getElementById('progressRing');
             const claimBtn = document.getElementById('claimRewardBtn');
@@ -607,49 +595,14 @@
             }, 1000);
         }
 
-        // ⭐ মূল ফাংশন: অ্যাড কোড iframe এর ভিতরে document.write করে লোড হয়
-        // Adsterra/যেকোনো অ্যাড নেটওয়ার্কের কোড এভাবেই কাজ করে
-        function renderAdInIframe(adCode) {
-            const container = document.getElementById('adContainer');
-            const loadingLabel = document.getElementById('adLoadingLabel');
-            const loadingText = document.getElementById('adLoadingText');
-            
-            container.innerHTML = '';
-            loadingLabel.style.display = 'flex';
-            loadingText.textContent = 'অ্যাড লোড হচ্ছে...';
-            loadingText.style.color = '#94a3b8';
-
-            const iframe = document.createElement('iframe');
-            container.appendChild(iframe);
-
-            const doc = iframe.contentWindow.document;
-            doc.open();
-            doc.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>body{margin:0;padding:0;overflow-x:hidden;background:#f8fafc;}</style></head><body>' + adCode + '</body></html>');
-            doc.close();
-
-            // ৫ সেকেন্ড পর চেক — অ্যাড লোড হয়েছে কিনা
-            setTimeout(() => {
-                try {
-                    const body = iframe.contentWindow.document.body;
-                    const hasAd = body.querySelector('iframe, img, ins, a[href], video, embed, object');
-                    if (hasAd) {
-                        loadingLabel.style.display = 'none';
-                    } else {
-                        loadingText.textContent = '⚠️ অ্যাড লোড হয়নি! ইন্টারনেট সংযোগ ও অ্যাডব্লকার চেক করুন';
-                        loadingText.style.color = '#ef4444';
-                    }
-                } catch(e) {}
-            }, 5000);
-        }
-
         // ৩০ সেকেন্ড পূর্ণ হলে ক্লেইম → তখনই টাস্ক সম্পূর্ণ + ব্যালেন্স যোগ
         function claimTaskReward() {
             if (pendingTaskId === null) return;
-            if (adInterval !== null) return;
+            if (adInterval !== null) return; // এখনও অ্যাড চলছে
             
             const taskId = pendingTaskId;
             pendingTaskId = null;
-            closeAdModal(true);
+            closeAdModal();
             
             const newTasks = [...(currentUserData.dailyTasksCompleted || []), taskId];
             const newHistory = [ ...(currentUserData.history || []) ];
@@ -665,15 +618,14 @@
                     return;
                 }
             }
-            closeAdModal(false);
+            closeAdModal();
+            pendingTaskId = null;
             showToast('অ্যাড সম্পূর্ণ দেখেননি, ব্যালেন্স যোগ হয়নি!', 'error');
         }
 
-        function closeAdModal(completed) {
+        function closeAdModal() {
             if (adInterval) { clearInterval(adInterval); adInterval = null; }
             document.getElementById('adModalOverlay').classList.remove('show');
-            document.getElementById('adContainer').innerHTML = ''; // অ্যাড সম্পূর্ণ বন্ধ
-            if (!completed) pendingTaskId = null;
         }
         // ================================================================
 
