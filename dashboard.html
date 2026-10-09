@@ -633,11 +633,9 @@
         // ================================================================
 
         // ================================================================
-        //  ⭐ ফটো সাবমিশন সিস্টেম (PERMISSION_DENIED ফিক্স) ⭐
-        //  ১. ছবি অটো কমপ্রেস হবে
-        //  ২. imgbb ব্যর্থ হলে base64 ব্যাকআপ
-        //  ৩. আগে ইউজারের নিজের ফোল্ডারে সেভ (সবসময় কাজ করে)
-        //  ৪. তারপর অ্যাডমিনের জন্য গ্লোবাল সেভ (রুলস ঠিক থাকলে)
+        //  ⭐ ফটো সাবমিশন সিস্টেম ⭐
+        //  ফিক্স: সাবমিটের সময় আর হিস্ট্রি তৈরি হবে না।
+        //  হিস্ট্রিতে শুধু এডমিন এপ্রুভ করার পর একটাই এন্ট্রি দেখাবে।
         // ================================================================
 
         // ছবি কমপ্রেস করার ফাংশন
@@ -740,26 +738,23 @@
                     userId: userId
                 };
 
-                // ===== ধাপ ৪: আগে ইউজারের নিজের ফোল্ডারে সেভ (এটা সবসময় কাজ করে) =====
+                // ===== ধাপ ৪: আগে ইউজারের নিজের ফোল্ডারে সেভ =====
+                // ⭐ ফিক্স: এখানে আর হিস্ট্রি যোগ হবে না — হিস্ট্রি শুধু এডমিন এপ্রুভের পর আসবে
                 const newSubmissions = [ { ...submissionObj }, ...(currentUserData.submissions || []) ];
-                const newHistory = [ ...(currentUserData.history || []) ];
-                newHistory.unshift({ title: `Photo Submitted: ${title}`, type: 'photo', amount: 2, date: new Date().toLocaleDateString() });
 
                 const updates = {
                     submissions: newSubmissions,
-                    photosSubmitted: (currentUserData.photosSubmitted || 0) + 1,
-                    history: newHistory
+                    photosSubmitted: (currentUserData.photosSubmitted || 0) + 1
                 };
                 await database.ref('users/' + userId).update(updates);
 
                 // ===== ধাপ ৫: অ্যাডমিন ড্যাশবোর্ডের জন্য গ্লোবাল photo_submissions এ সেভ =====
-                // ⚠️ এটা কাজ করতে Firebase Rules এ photo_submissions এর write permission থাকতে হবে
                 let globalOk = true;
                 try {
                     await database.ref('photo_submissions/' + globalSubId).set(submissionObj);
                 } catch (globalErr) {
                     globalOk = false;
-                    console.warn('Global submission save failed (Firebase Rules আপডেট করুন):', globalErr.message);
+                    console.warn('Global submission save failed:', globalErr.message);
                 }
 
                 // ফর্ম রিসেট
@@ -768,9 +763,8 @@
                 selectedWorkPhoto = null;
                 
                 if (globalOk) {
-                    showToast('Photo submitted successfully! Pending admin approval.');
+                    showToast('Photo submitted! Pending admin approval.');
                 } else {
-                    // ইউজারের সাবমিশন সেভ হয়েছে, শুধু অ্যাডমিন কপি যায়নি — রুলস ঠিক করলেই হবে
                     showToast('Photo saved! (Admin copy failed - update Firebase Rules)', 'error');
                 }
             } catch (e) {
