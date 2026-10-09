@@ -32,7 +32,6 @@
         .card:hover { border-color: var(--accent); box-shadow: 0 4px 20px var(--accent-glow), 0 1px 3px rgba(0,0,0,0.06); }
         .btn-primary { background: linear-gradient(135deg, var(--accent), #00a884); color: #ffffff; font-weight: 600; padding: 12px 24px; border-radius: 10px; transition: all 0.3s ease; border: none; cursor: pointer; }
         .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px var(--accent-glow); }
-        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
         .btn-secondary { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 10px 20px; border-radius: 10px; transition: all 0.3s ease; cursor: pointer; }
         .btn-secondary:hover { border-color: var(--accent); background: var(--card-hover); }
         .btn-danger { background: #ef4444; color: #fff; font-weight: 600; padding: 12px 24px; border-radius: 10px; transition: all 0.3s ease; border: none; cursor: pointer; width: 100%; }
@@ -69,11 +68,10 @@
         img { pointer-events: none; }
         @media (max-width: 640px) { .balance-card { padding: 16px; } }
 
-        /* ===== অ্যাড স্ট্যাটাস বার (ফিরে এসে কাউন্টডাউন দেখাবে) ===== */
-        .ad-status-bar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 1500; background: #ffffff; border-top: 2px solid var(--accent); padding: 12px 16px; box-shadow: 0 -4px 20px rgba(0,0,0,0.12); display: none; }
-        .ad-status-bar.show { display: block; animation: fadeInUp 0.3s ease; }
-        .progress-track { height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; }
-        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), #00a884); width: 0%; transition: width 1s linear; border-radius: 4px; }
+        /* ===== অ্যাড রেজাল্ট মেসেজ মোডাল ===== */
+        .ad-result-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(6px); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 16px; }
+        .ad-result-overlay.show { display: flex; }
+        .ad-result-box { background: #ffffff; border-radius: 20px; max-width: 360px; width: 100%; padding: 28px 24px; text-align: center; animation: fadeInUp 0.3s ease; box-shadow: 0 20px 60px rgba(0,0,0,0.35); }
     </style>
 </head>
 <body ondragstart="return false" onselectstart="return false" oncontextmenu="return false">
@@ -112,7 +110,7 @@
     </aside>
 
     <!-- Main Content -->
-    <main class="relative z-10 min-h-screen p-4 sm:p-6 pb-24">
+    <main class="relative z-10 min-h-screen p-4 sm:p-6">
         <header class="flex items-center justify-between mb-6">
             <div class="flex items-center gap-3">
                 <a href="../index.html"><img src="https://i.ibb.co/wNjHwXKF/1000033078.png" alt="Logo" class="h-10 w-10 rounded-full"></a>
@@ -249,7 +247,7 @@
             <!-- Daily Task Section -->
             <section id="taskSection" class="section hidden">
                 <h2 class="text-2xl font-bold mb-6 animate-fadeInUp text-gray-800">Daily Task</h2>
-                <p class="text-gray-500 mb-4 animate-fadeInUp stagger-1">Complete 10 tasks daily and earn 2 TK per task. বাটনে ক্লিক করলে সরাসরি অ্যাডে যাবে, ৩০ সেকেন্ড দেখার পর অটোমেটিক ব্যালেন্স যোগ হবে।</p>
+                <p class="text-gray-500 mb-4 animate-fadeInUp stagger-1">Complete 10 tasks daily and earn 2 TK per task</p>
                 <div id="taskList" class="grid gap-4 animate-fadeInUp stagger-2"></div>
             </section>
 
@@ -284,14 +282,13 @@
         </div>
     </main>
 
-    <!-- ===== অ্যাড দেখার স্ট্যাটাস বার (ফিরে এলে নিচে কাউন্টডাউন দেখাবে) ===== -->
-    <div id="adStatusBar" class="ad-status-bar">
-        <div class="flex items-center justify-between gap-3 mb-2">
-            <span id="adBannerText" class="text-sm font-semibold text-gray-800">🔴 অ্যাড দেখা চলছে...</span>
-            <button class="btn-primary text-sm" style="padding:8px 16px;" onclick="goBackToAd()">📺 অ্যাডে ফিরে যান</button>
-        </div>
-        <div class="progress-track">
-            <div id="adBannerProgress" class="progress-fill"></div>
+    <!-- ===== অ্যাড রেজাল্ট মেসেজ (সাকসেস / ফেইল) ===== -->
+    <div class="ad-result-overlay" id="adResultOverlay">
+        <div class="ad-result-box">
+            <div id="adResultIcon" class="text-6xl mb-3"></div>
+            <h3 id="adResultTitle" class="text-xl font-bold mb-3"></h3>
+            <p id="adResultMessage" class="text-sm text-gray-600 mb-5 leading-relaxed"></p>
+            <button class="btn-primary w-full" onclick="closeAdResult()">ঠিক আছে</button>
         </div>
     </div>
 
@@ -330,14 +327,13 @@
         let selectedWorkPhoto = null;
 
         // ================================================================
-        //  ⭐ অ্যাড লিংক সেটিংস (এখানেই বদলাবেন) ⭐
+        //  ⭐ অ্যাড সেটিংস (এখানেই বদলাবেন) ⭐
         // ================================================================
-        
-        // এই লিংকটা সব বাটনে কাজ করবে (ডিফল্ট)
+
+        // সব বাটনে যে অ্যাড লিংক খুলবে (ডিফল্ট)
         const DEFAULT_AD_LINK = 'https://www.profitableratecpmnetwork.com/a4qbuw4c5q?key=ae1e704c64652992571491f059fbd4ed';
 
-        // কোনো নির্দিষ্ট বাটনে আলাদা লিংক দিতে চাইলে এখানে বসান
-        // খালি ('') রাখলে সেই বাটনে উপরের ডিফল্ট লিংকটাই খুলবে
+        // নির্দিষ্ট বাটনে আলাদা লিংক দিতে চাইলে এখানে বসান (খালি = ডিফল্ট লিংক)
         const TASK_AD_LINKS = {
             1: '',  // বাটন ১ (Watch Video Ad)
             2: '',  // বাটন ২ (Social Share)
@@ -351,10 +347,10 @@
             10: ''  // বাটন ১০ (Bonus Task)
         };
 
-        const AD_DURATION = 30; // ৩০ সেকেন্ড (মিলিসেকেন্ডে হিসাব হবে)
-        const PENDING_KEY = 'pendingAdTask';
+        // ⭐ কত সেকেন্ড অ্যাড দেখতে হবে (এক মিনিট = ৬০, বদলাতে চাইলে এখানে বদলান)
+        const AD_DURATION = 60;
 
-        let countdownInterval = null;
+        const PENDING_KEY = 'pendingAdTask';
         let pendingAdChecked = false;
         let isFinishingTask = false;
         // ================================================================
@@ -384,7 +380,7 @@
                     currentUserData.myReferralCode = currentUserData.myReferralCode || generateReferCode();
                     currentUserData.dailyTasksCompleted = currentUserData.dailyTasksCompleted || [];
                     initPageUI();
-                    // পেজে ফিরে এসেছে কিনা চেক — অ্যাড টাইমার চেক করে
+                    // অ্যাড থেকে ফিরে এসেছে কিনা চেক (একবারই চলবে)
                     if (!pendingAdChecked) { pendingAdChecked = true; checkPendingAdTask(); }
                 } else { logout(); } // ইউজার না থাকলে লগআউট
             });
@@ -512,48 +508,44 @@
             database.ref('users/' + userId).update(updates).then(() => { document.getElementById('withdrawAccount').value = ''; document.getElementById('withdrawAmount').value = ''; showToast('Withdrawal request submitted!'); });
         }
 
+        function loadTasks() {
+            const c = document.getElementById('taskList');
+            const today = new Date().toDateString();
+            if (currentUserData.lastTaskDate !== today) { database.ref('users/' + userId).update({ dailyTasksCompleted: [], lastTaskDate: today }); currentUserData.dailyTasksCompleted = []; }
+            const tasks = [ {id:1, title:'Watch Video Ad'}, {id:2, title:'Social Share'}, {id:3, title:'Daily Check-in'}, {id:4, title:'Survey'}, {id:5, title:'App Install'}, {id:6, title:'Refer Friend'}, {id:7, title:'Photo Task'}, {id:8, title:'Read Article'}, {id:9, title:'Play Game'}, {id:10, title:'Bonus Task'} ];
+            c.innerHTML = tasks.map(t => {
+                const done = (currentUserData.dailyTasksCompleted || []).includes(t.id);
+                return `<div class="task-card flex items-center justify-between"><div><p class="font-medium text-gray-800">${t.title}</p></div><div class="flex items-center gap-3"><span class="text-emerald-600 font-semibold">+2 TK</span><button class="btn-${done ? 'secondary opacity-50' : 'primary'} text-sm" onclick="completeTask(${t.id})" ${done ? 'disabled' : ''}>${done ? 'Done' : 'Start'}</button></div></div>`;
+            }).join('');
+        }
+
         // ================================================================
-        //  অ্যাড সিস্টেম: ক্লিক → সরাসরি অ্যাডে যাবে → ফিরে এলে কাউন্টডাউন → ৩০ সেকেন্ডে অটো রিওয়ার্ড
+        //  অ্যাড সিস্টেম:
+        //  ক্লিক → সরাসরি অ্যাডে যাবে → পুরো সময় দেখে ফিরলে অটো টাকা যোগ
+        //  আগে ফিরে এলে → মেসেজ দেখাবে "সম্পূর্ণ দেখতে হবে, আবার ক্লিক করুন"
         // ================================================================
 
-        // কোন বাটনের কোন লিংক যাবে তা ঠিক করে
+        // কোন বাটনের কোন লিংক যাবে
         function getAdLink(taskId) {
             const link = TASK_AD_LINKS[taskId];
             return (link && link.trim() !== '') ? link : DEFAULT_AD_LINK;
         }
 
-        // ⭐ Start বাটনে ক্লিক → সময় সেভ করে সরাসরি অ্যাড পেজে নিয়ে যাবে (এই ট্যাবেই)
+        // ⭐ Start বাটনে ক্লিক → সময় সেভ করে সরাসরি অ্যাড পেজে নিয়ে যাওয়া
         function completeTask(taskId) {
             if ((currentUserData.dailyTasksCompleted || []).includes(taskId)) return;
             
-            // অন্য একটা অ্যাড এখনো চলমান থাকলে আগে সেটা শেষ করতে বলা হবে
-            const existing = localStorage.getItem(PENDING_KEY);
-            if (existing) {
-                showToast('আগে চলমান অ্যাডটি সম্পূর্ণ করুন!', 'error');
-                return;
-            }
-            
-            // শুরুর সময় সেভ — ব্রাউজার বন্ধ হলেও মনে থাকবে
+            // শুরুর সময় সেভ — এটাই দেখার সময় হিসাবের ভিত্তি
             localStorage.setItem(PENDING_KEY, JSON.stringify({ taskId: taskId, startTime: Date.now() }));
             
-            // সরাসরি অ্যাডে নিয়ে যাওয়া (নতুন ট্যাব না, এই ট্যাবেই)
+            // সরাসরি অ্যাডে নিয়ে যাওয়া
             window.location.href = getAdLink(taskId);
         }
 
-        // অ্যাড থেকে ফিরে এসে আবার অ্যাডে যেতে চাইলে
-        function goBackToAd(taskId) {
-            let id = taskId;
-            if (!id) {
-                try { const p = JSON.parse(localStorage.getItem(PENDING_KEY) || 'null'); if (p) id = p.taskId; } catch(e) {}
-            }
-            if (!id) return;
-            window.location.href = getAdLink(id);
-        }
-
-        // ⭐ পেজে ফিরে এলে চেক হবে: ৩০ সেকেন্ড পূর্ণ হয়েছে কিনা
+        // ⭐ অ্যাড থেকে ফিরে এসে চেক হবে: পুরো সময় দেখেছে কিনা
         function checkPendingAdTask() {
             const raw = localStorage.getItem(PENDING_KEY);
-            if (!raw) return;
+            if (!raw) return; // কোনো অ্যাড চালু নেই
             
             let pending = null;
             try { pending = JSON.parse(raw); } catch(e) { localStorage.removeItem(PENDING_KEY); return; }
@@ -561,75 +553,33 @@
             
             const taskId = pending.taskId;
             
-            // টাস্ক আগেই হয়ে গেথাকলে পেন্ডিং মুছে ফেলা
+            // টাস্ক আগেই হয়ে গেথাকলে বাদ
             if ((currentUserData.dailyTasksCompleted || []).includes(taskId)) {
                 localStorage.removeItem(PENDING_KEY);
                 return;
             }
             
-            const elapsed = Date.now() - pending.startTime;
-            const total = AD_DURATION * 1000;
-            const remaining = total - elapsed;
+            // কতক্ষণ অ্যাড দেখেছে হিসাব
+            const elapsedMs = Date.now() - pending.startTime;
+            const elapsedSec = Math.floor(elapsedMs / 1000);
+            const totalMs = AD_DURATION * 1000;
             
-            if (remaining <= 0) {
-                // ✅ ৩০ সেকেন্ড পূর্ণ — অটোমেটিক টাস্ক সম্পূর্ণ + ব্যালেন্স যোগ
-                finishAdTask(taskId);
+            // পেন্ডিং মুছে ফেলা — সফল হোক বা ব্যর্থ, বাটন আবার Start থাকবে
+            localStorage.removeItem(PENDING_KEY);
+            
+            if (elapsedMs >= totalMs) {
+                // ✅ পুরো সময় দেখেছে → টাকা যোগ হবে
+                finishAdTask(taskId, elapsedSec);
             } else {
-                // ⏳ এখনো বাকি — কাউন্টডাউন দেখাবে, বাটনও কাউন্টডাউনে বদলে যাবে
-                startCountdown(taskId, remaining, total);
+                // ❌ আগে ফিরে এসেছে → মেসেজ দেখাবে, টাকা যোগ হবে না
+                showAdResult('fail', elapsedSec);
             }
         }
 
-        // ফিরে এসে কাউন্টডাউন চালু রাখা (নিচের বার + টাস্ক বাটনে)
-        function startCountdown(taskId, remainingMs, totalMs) {
-            const bar = document.getElementById('adStatusBar');
-            bar.classList.add('show');
-            updateCountdown(taskId, remainingMs, totalMs);
-            
-            if (countdownInterval) clearInterval(countdownInterval);
-            countdownInterval = setInterval(() => {
-                const raw = localStorage.getItem(PENDING_KEY);
-                if (!raw) { stopCountdown(); return; }
-                let p = null;
-                try { p = JSON.parse(raw); } catch(e) { stopCountdown(); return; }
-                
-                const rem = totalMs - (Date.now() - p.startTime);
-                if (rem <= 0) {
-                    finishAdTask(p.taskId);
-                } else {
-                    updateCountdown(p.taskId, rem, totalMs);
-                }
-            }, 1000);
-        }
-
-        function updateCountdown(taskId, remainingMs, totalMs) {
-            const sec = Math.ceil(remainingMs / 1000);
-            const pct = Math.min(100, Math.max(0, ((totalMs - remainingMs) / totalMs) * 100));
-            
-            // নিচের স্ট্যাটাস বার
-            const textEl = document.getElementById('adBannerText');
-            const progEl = document.getElementById('adBannerProgress');
-            if (textEl) textEl.textContent = '🔴 অ্যাড দেখা চলছে... ' + sec + ' সেকেন্ড বাকি';
-            if (progEl) progEl.style.width = pct + '%';
-            
-            // টাস্ক লিস্টের বাটনেও কাউন্টডাউন দেখাবে
-            const btn = document.getElementById('taskBtn_' + taskId);
-            if (btn) btn.textContent = '🔴 ' + sec + ' সেকেন্ড বাকি';
-        }
-
-        function stopCountdown() {
-            if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
-            const bar = document.getElementById('adStatusBar');
-            if (bar) bar.classList.remove('show');
-        }
-
-        // ⭐ ৩০ সেকেন্ড পূর্ণ → টাস্ক সম্পূর্ণ + ব্যালেন্স যোগ (অটোমেটিক)
-        function finishAdTask(taskId) {
+        // ✅ সফল: টাস্ক সম্পূর্ণ + ব্যালেন্স যোগ
+        function finishAdTask(taskId, watchedSec) {
             if (isFinishingTask) return;
             isFinishingTask = true;
-            
-            localStorage.removeItem(PENDING_KEY);
-            stopCountdown();
             
             const newTasks = [...(currentUserData.dailyTasksCompleted || []), taskId];
             const newHistory = [ ...(currentUserData.history || []) ];
@@ -637,40 +587,41 @@
             const updates = { dailyTasksCompleted: newTasks, balance: (currentUserData.balance || 0) + 2, tasksCompleted: (currentUserData.tasksCompleted || 0) + 1, history: newHistory };
             
             database.ref('users/' + userId).update(updates).then(() => {
-                showToast('✅ অ্যাড সম্পূর্ণ! Task completed! +2 TK');
                 isFinishingTask = false;
+                showAdResult('success', watchedSec);
             }).catch(() => { isFinishingTask = false; });
         }
 
-        // ================================================================
-
-        function loadTasks() {
-            const c = document.getElementById('taskList');
-            const today = new Date().toDateString();
-            if (currentUserData.lastTaskDate !== today) { database.ref('users/' + userId).update({ dailyTasksCompleted: [], lastTaskDate: today }); currentUserData.dailyTasksCompleted = []; }
+        // ===== রেজাল্ট মেসেজ মোডাল =====
+        function showAdResult(type, watchedSec) {
+            const overlay = document.getElementById('adResultOverlay');
+            const icon = document.getElementById('adResultIcon');
+            const title = document.getElementById('adResultTitle');
+            const msg = document.getElementById('adResultMessage');
             
-            // চলমান পেন্ডিং অ্যাড টাস্ক আছে কিনা
-            let pendingTask = null;
-            try { pendingTask = JSON.parse(localStorage.getItem(PENDING_KEY) || 'null'); } catch(e) {}
+            if (type === 'fail') {
+                icon.textContent = '❌';
+                title.textContent = 'অ্যাড সম্পূর্ণ দেখেননি!';
+                title.style.color = '#ef4444';
+                msg.innerHTML = 'আপনি মাত্র <b>' + watchedSec + ' সেকেন্ড</b> অ্যাড দেখেছেন।<br><br>' +
+                    'সম্পূর্ণ <b>' + AD_DURATION + ' সেকেন্ড</b> অ্যাড দেখতে হবে।<br>' +
+                    '<b>সম্পূর্ণ না দেখলে টাকা যোগ হবে না!</b><br><br>' +
+                    'আবার <b>Start</b> বাটনে ক্লিক করে সম্পূর্ণ অ্যাড দেখুন।';
+            } else {
+                icon.textContent = '✅';
+                title.textContent = 'অ্যাড সম্পূর্ণ হয়েছে!';
+                title.style.color = '#10b981';
+                msg.innerHTML = 'অভিনন্দন! আপনি সম্পূর্ণ <b>' + AD_DURATION + ' সেকেন্ড</b> অ্যাড দেখেছেন।<br><br>' +
+                    '<b>+2 TK</b> আপনার ব্যালেন্সে যোগ হয়েছে। 🎉';
+            }
             
-            const tasks = [ {id:1, title:'Watch Video Ad'}, {id:2, title:'Social Share'}, {id:3, title:'Daily Check-in'}, {id:4, title:'Survey'}, {id:5, title:'App Install'}, {id:6, title:'Refer Friend'}, {id:7, title:'Photo Task'}, {id:8, title:'Read Article'}, {id:9, title:'Play Game'}, {id:10, title:'Bonus Task'} ];
-            c.innerHTML = tasks.map(t => {
-                const done = (currentUserData.dailyTasksCompleted || []).includes(t.id);
-                const isPending = pendingTask && pendingTask.taskId === t.id && !done;
-                
-                let btnHtml;
-                if (done) {
-                    btnHtml = `<button class="btn-secondary opacity-50 text-sm" disabled>Done</button>`;
-                } else if (isPending) {
-                    // ⏳ এই টাস্কের অ্যাড চলছে — বাটনে ক্লিক করলে আবার অ্যাডে ফিরে যাবে
-                    btnHtml = `<button id="taskBtn_${t.id}" class="btn-primary text-sm" onclick="goBackToAd(${t.id})">🔴 অ্যাডে ফিরুন</button>`;
-                } else {
-                    btnHtml = `<button class="btn-primary text-sm" onclick="completeTask(${t.id})">Start</button>`;
-                }
-                
-                return `<div class="task-card flex items-center justify-between"><div><p class="font-medium text-gray-800">${t.title}</p></div><div class="flex items-center gap-3"><span class="text-emerald-600 font-semibold">+2 TK</span>${btnHtml}</div></div>`;
-            }).join('');
+            overlay.classList.add('show');
         }
+
+        function closeAdResult() {
+            document.getElementById('adResultOverlay').classList.remove('show');
+        }
+        // ================================================================
 
         function handleWorkPhoto(input) {
             if (!input.files || !input.files[0]) return;
