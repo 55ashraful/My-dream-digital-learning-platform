@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ask Counselor - My Dream Digital</title>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <style>
+        * { box-sizing:border-box; margin:0; padding:0; }
+        body { font-family:'Hind Siliguri',sans-serif; background:#f7f7f7; min-height:100vh; padding:20px; }
+        .wrap { max-width:600px; margin:0 auto; }
+        header { background:#fff; padding:15px 20px; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.08); display:flex; align-items:center; gap:10px; margin-bottom:20px; }
+        header img { height:40px; width:40px; border-radius:50%; pointer-events:none; }
+        header h1 { font-size:1.1rem; color:#6a11cb; }
+        .card { background:#fff; padding:25px; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.08); margin-bottom:20px; }
+        h2 { color:#6a11cb; font-size:1.2rem; margin-bottom:15px; }
+        textarea { width:100%; padding:12px 15px; border:1px solid #eee; border-radius:8px; font-size:1rem; font-family:inherit; margin-bottom:12px; background:#fcfcfc; }
+        textarea:focus { outline:none; border-color:#2575fc; }
+        .btn { display:block; width:100%; padding:14px; border:none; border-radius:8px; background:linear-gradient(to right,#6a11cb,#2575fc); color:#fff; font-size:1rem; font-weight:600; cursor:pointer; }
+        .msg { padding:12px; border-radius:8px; margin-bottom:12px; text-align:center; display:none; font-weight:500; }
+        .msg-err { background:#fcebeb; color:#e74c3c; }
+        .msg-ok { background:#e8f8f0; color:#27ae60; }
+        .q-item { background:#f8fafc; border:1px solid #e2e8f0; border-left:4px solid #6366f1; border-radius:10px; padding:14px; margin-bottom:12px; }
+        .badge { float:right; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; }
+        .badge-pending { background:rgba(245,158,11,.15); color:#b45309; }
+        .badge-answered { background:rgba(16,185,129,.15); color:#047857; }
+        .reply { background:#eef2ff; padding:10px; border-radius:8px; margin-top:10px; font-size:0.9rem; }
+        .back { display:inline-block; margin-bottom:15px; color:#6a11cb; text-decoration:none; font-weight:500; }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+<div class="wrap">
+    <a href="index.html" class="back">← Back to Home</a>
+    <header>
+        <img src="https://i.ibb.co/wNjHwXKF/1000033078.png" alt="Logo">
+        <h1>Ask a Counselor</h1>
+    </header>
+
+    <div class="card">
+        <h2>আপনার প্রশ্ন করুন</h2>
+        <div class="msg msg-err" id="err"></div>
+        <div class="msg msg-ok" id="ok"></div>
+        <textarea id="question" rows="4" placeholder="কোর্স, আর্নিং বা যেকোনো সমস্যা নিয়ে প্রশ্ন লিখুন..."></textarea>
+        <button class="btn" onclick="askQuestion()">প্রশ্ন পাঠান</button>
+    </div>
+
+    <div class="card">
+        <h2>আমার প্রশ্ন ও উত্তর</h2>
+        <div id="myQuestions"></div>
+    </div>
+</div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyB8aEO4CyIP6l4kspuo_sJUMTwUzp0NvzU",
+  authDomain: "my-income-d85b2.firebaseapp.com",
+  databaseURL: "https://my-income-d85b2-default-rtdb.firebaseio.com",
+  projectId: "my-income-d85b2",
+  storageBucket: "my-income-d85b2.firebasestorage.app",
+  messagingSenderId: "731557596083",
+  appId: "1:731557596083:web:0f2c25edd8c87dfcd359c6"
+};
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+
+const userId = localStorage.getItem('userId');
+if (!userId) { window.location.href = 'login.html'; }
+
+let myName = 'Student';
+database.ref('users/' + userId).once('value').then(s => {
+    if (s.exists()) myName = ((s.val().firstName||'') + ' ' + (s.val().lastName||'')).trim() || 'Student';
+});
+
+function askQuestion() {
+    const q = document.getElementById('question').value.trim();
+    const err = document.getElementById('err'), ok = document.getElementById('ok');
+    err.style.display='none'; ok.style.display='none';
+    if (!q) { err.innerText='প্রশ্ন লিখুন'; err.style.display='block'; return; }
+    database.ref('queries').push({
+        userId: userId, name: myName, question: q, status: 'pending',
+        date: new Date().toLocaleDateString(), timestamp: Date.now()
+    }).then(() => {
+        document.getElementById('question').value='';
+        ok.innerText='✅ প্রশ্ন পাঠানো হয়েছে! কাউন্সেলর শীঘ্রই উত্তর দেবেন।';
+        ok.style.display='block';
+    }).catch(e => { err.innerText='Error: '+e.message; err.style.display='block'; });
+}
+
+database.ref('queries').orderByChild('userId').equalTo(userId).on('value', snap => {
+    const c = document.getElementById('myQuestions');
+    c.innerHTML = '';
+    if (!snap.exists()) { c.innerHTML='<p style="color:#94a3b8;text-align:center;padding:15px;">এখনো কোনো প্রশ্ন করেননি</p>'; return; }
+    const arr = [];
+    snap.forEach(ch => arr.push({ id: ch.key, ...ch.val() }));
+    arr.sort((a,b) => (b.timestamp||0)-(a.timestamp||0));
+    arr.forEach(q => {
+        c.innerHTML += `
+        <div class="q-item">
+            <span class="badge ${q.status==='answered'?'badge-answered':'badge-pending'}">${q.status==='answered'?'উত্তর পেয়েছে':'অপেক্ষমাণ'}</span>
+            <p style="font-weight:600;color:#1e293b;">${q.question}</p>
+            <p style="font-size:0.75rem;color:#94a3b8;margin-top:4px;">${q.date||''}</p>
+            ${q.status==='answered'?`<div class="reply"><strong style="color:#4f46e5;">কাউন্সেলরের উত্তর:</strong><br>${q.reply}</div>`:''}
+        </div>`;
+    });
+});
+</script>
+</body>
+</html>
