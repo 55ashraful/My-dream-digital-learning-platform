@@ -105,6 +105,8 @@
             <div class="menu-item" onclick="showSection('task')"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg><span>Daily Task</span></div>
             <div class="menu-item" onclick="showSection('submit')"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><span>Submit Work</span></div>
             <div class="menu-item" onclick="window.location.href='class.html'"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg><span>Class</span></div>
+            <!-- 🆕 Ask Counselor মেনু -->
+            <div class="menu-item" onclick="showSection('counselor')"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg><span>Ask Counselor</span></div>
             <div class="menu-item text-red-500" onclick="logout()"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg><span>Logout</span></div>
         </nav>
     </aside>
@@ -255,6 +257,22 @@
                 <div id="taskList" class="grid gap-4 animate-fadeInUp stagger-2"></div>
             </section>
 
+            <!-- 🆕 Ask Counselor Section -->
+            <section id="counselorSection" class="section hidden">
+                <h2 class="text-2xl font-bold mb-6 animate-fadeInUp text-gray-800">Ask a Counselor</h2>
+                <div class="card p-5 mb-6 animate-fadeInUp stagger-1">
+                    <h3 class="text-lg font-semibold mb-4 text-gray-800">আপনার প্রশ্ন করুন</h3>
+                    <div class="space-y-4">
+                        <textarea id="counselorQuestion" class="input-field" rows="4" placeholder="কোর্স, আর্নিং বা যেকোনো সমস্যা নিয়ে প্রশ্ন লিখুন..."></textarea>
+                        <button class="btn-primary w-full" onclick="askCounselor()">প্রশ্ন পাঠান</button>
+                    </div>
+                </div>
+                <div class="card p-5 animate-fadeInUp stagger-2">
+                    <h3 class="text-lg font-semibold mb-4 text-gray-800">আমার প্রশ্ন ও উত্তর</h3>
+                    <div id="myQueriesList" class="space-y-3"></div>
+                </div>
+            </section>
+
             <!-- Submit Work Section -->
             <section id="submitSection" class="section hidden">
                 <h2 class="text-2xl font-bold mb-6 animate-fadeInUp text-gray-800">Submit Work</h2>
@@ -334,27 +352,14 @@
         //  ⭐ অ্যাড সেটিংস (এখানেই বদলাবেন) ⭐
         // ================================================================
 
-        // সব বাটনে যে অ্যাড লিংক খুলবে (ডিফল্ট)
         const DEFAULT_AD_LINK = 'https://www.profitableratecpmnetwork.com/a4qbuw4c5q?key=ae1e704c64652992571491f059fbd4ed';
 
-        // নির্দিষ্ট বাটনে আলাদা লিংক দিতে চাইলে এখানে বসান (খালি = ডিফল্ট লিংক)
         const TASK_AD_LINKS = {
-            1: '',  // বাটন ১ (Watch Video Ad)
-            2: '',  // বাটন ২ (Social Share)
-            3: '',  // বাটন ৩ (Daily Check-in)
-            4: '',  // বাটন ৪ (Survey)
-            5: '',  // বাটন ৫ (App Install)
-            6: '',  // বাটন ৬ (Refer Friend)
-            7: '',  // বাটন ৭ (Photo Task)
-            8: '',  // বাটন ৮ (Read Article)
-            9: '',  // বাটন ৯ (Play Game)
-            10: ''  // বাটন ১০ (Bonus Task)
+            1: '', 2: '', 3: '', 4: '', 5: '',
+            6: '', 7: '', 8: '', 9: '', 10: ''
         };
 
-        // ⭐ কত সেকেন্ড অ্যাড দেখতে হবে (এক মিনিট = ৬০)
         const AD_DURATION = 60;
-
-        // ⭐ উইথড্রয়ের পর ব্যালেন্সে কমপক্ষে যত টাকা থাকতে হবে
         const MIN_BALANCE_AFTER_WITHDRAW = 10;
 
         const PENDING_KEY = 'pendingAdTask';
@@ -363,7 +368,6 @@
         // ================================================================
 
         document.addEventListener('DOMContentLoaded', () => {
-            // লগইন ছাড়া ঢোকা বন্ধ
             if (localStorage.getItem('isLoggedIn') !== 'true' || !localStorage.getItem('userId')) {
                 window.location.href = '../login.html'; return;
             }
@@ -373,7 +377,6 @@
         });
 
         function loadUserData() {
-            // শুধুমাত্র users ফোল্ডার থেকে ডাটা লোড করা হচ্ছে
             database.ref('users/' + userId).on('value', (snapshot) => {
                 if (snapshot.exists()) {
                     currentUserData = snapshot.val();
@@ -387,9 +390,8 @@
                     currentUserData.myReferralCode = currentUserData.myReferralCode || generateReferCode();
                     currentUserData.dailyTasksCompleted = currentUserData.dailyTasksCompleted || [];
                     initPageUI();
-                    // অ্যাড থেকে ফিরে এসেছে কিনা চেক (একবারই চলবে)
                     if (!pendingAdChecked) { pendingAdChecked = true; checkPendingAdTask(); }
-                } else { logout(); } // ইউজার না থাকলে লগআউট
+                } else { logout(); }
             });
         }
 
@@ -426,7 +428,7 @@
             document.getElementById('profilePassword').value = u.password || '';
             document.getElementById('profileReferCode').value = u.myReferralCode;
             
-            loadRecentActivity(); loadHistory(); loadTasks(); loadSubmissions();
+            loadRecentActivity(); loadHistory(); loadTasks(); loadSubmissions(); loadMyQueries();
         }
 
         function createParticles() { const c = document.getElementById('particles'); if(!c) return; c.innerHTML = ''; for (let i = 0; i < 15; i++) { const p = document.createElement('div'); p.className = 'particle'; p.style.left = Math.random() * 100 + '%'; p.style.top = Math.random() * 100 + '%'; p.style.animationDelay = Math.random() * 5 + 's'; p.style.animationDuration = (10 + Math.random() * 10) + 's'; c.appendChild(p); } }
@@ -441,6 +443,49 @@
         }
 
         function showToast(message, type = 'success') { const t = document.getElementById('toast'); const m = document.getElementById('toastMessage'); m.textContent = message; t.style.background = type === 'success' ? '#10b981' : '#ef4444'; t.classList.remove('translate-y-20', 'opacity-0'); t.classList.add('translate-y-0', 'opacity-100'); setTimeout(() => { t.classList.remove('translate-y-0', 'opacity-100'); t.classList.add('translate-y-20', 'opacity-0'); }, 3000); }
+
+        // ================================================================
+        //  🆕 Ask Counselor System
+        // ================================================================
+        function askCounselor() {
+            const q = document.getElementById('counselorQuestion').value.trim();
+            if (!q) { showToast('প্রশ্ন লিখুন', 'error'); return; }
+            const fullName = (currentUserData.firstName || '') + ' ' + (currentUserData.lastName || '');
+            database.ref('queries').push({
+                userId: userId,
+                name: fullName.trim() || 'Student',
+                question: q,
+                status: 'pending',
+                date: new Date().toLocaleDateString(),
+                timestamp: Date.now()
+            }).then(() => {
+                document.getElementById('counselorQuestion').value = '';
+                showToast('প্রশ্ন পাঠানো হয়েছে! কাউন্সেলর শীঘ্রই উত্তর দেবেন।');
+            }).catch(e => showToast('Error: ' + e.message, 'error'));
+        }
+
+        function loadMyQueries() {
+            database.ref('queries').orderByChild('userId').equalTo(userId).on('value', snap => {
+                const c = document.getElementById('myQueriesList');
+                if (!c) return;
+                c.innerHTML = '';
+                if (!snap.exists()) { c.innerHTML = '<p class="text-gray-400 text-center py-8">এখনো কোনো প্রশ্ন করেননি</p>'; return; }
+                const arr = [];
+                snap.forEach(ch => arr.push({ id: ch.key, ...ch.val() }));
+                arr.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                arr.forEach(q => {
+                    c.innerHTML += `
+                    <div class="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                        <div class="flex justify-between items-start mb-2">
+                            <p class="font-medium text-gray-800">${q.question}</p>
+                            <span class="badge ${q.status === 'answered' ? 'badge-approved' : 'badge-pending'}">${q.status === 'answered' ? 'উত্তর পেয়েছে' : 'অপেক্ষমাণ'}</span>
+                        </div>
+                        <p class="text-xs text-gray-400 mb-2">${q.date || ''}</p>
+                        ${q.status === 'answered' ? `<div class="bg-emerald-50 p-3 rounded-lg"><p class="text-xs text-emerald-600 font-semibold mb-1">কাউন্সেলরের উত্তর:</p><p class="text-sm text-gray-700">${q.reply}</p></div>` : ''}
+                    </div>`;
+                });
+            });
+        }
 
         async function uploadProfilePhoto(input) {
             if (!input.files || !input.files[0]) return;
@@ -508,7 +553,6 @@
             if (!method || !account || !amount) { showToast('Please fill all fields', 'error'); return; }
             if (amount < 50) { showToast('Minimum withdrawal is 50 TK', 'error'); return; }
             if (currentUserData.balance < amount) { showToast('Insufficient balance', 'error'); return; }
-            // ⭐ নতুন রুল: উইথড্রয়ের পর ব্যালেন্সে কমপক্ষে ১০ টাকা থাকতে হবে
             if ((currentUserData.balance - amount) < MIN_BALANCE_AFTER_WITHDRAW) { showToast('You must keep at least 10 TK in your balance after withdrawal', 'error'); return; }
             const newBalance = currentUserData.balance - amount;
             const newHistory = [ ...(currentUserData.history || []) ];
@@ -529,32 +573,22 @@
         }
 
         // ================================================================
-        //  অ্যাড সিস্টেম:
-        //  ক্লিক → সরাসরি অ্যাডে যাবে → পুরো সময় দেখে ফিরলে অটো টাকা যোগ
-        //  আগে ফিরে এলে → মেসেজ দেখাবে "সম্পূর্ণ দেখতে হবে, আবার ক্লিক করুন"
+        //  অ্যাড সিস্টেম
         // ================================================================
-
-        // কোন বাটনের কোন লিংক যাবে
         function getAdLink(taskId) {
             const link = TASK_AD_LINKS[taskId];
             return (link && link.trim() !== '') ? link : DEFAULT_AD_LINK;
         }
 
-        // ⭐ Start বাটনে ক্লিক → সময় সেভ করে সরাসরি অ্যাড পেজে নিয়ে যাওয়া
         function completeTask(taskId) {
             if ((currentUserData.dailyTasksCompleted || []).includes(taskId)) return;
-            
-            // শুরুর সময় সেভ — এটাই দেখার সময় হিসাবের ভিত্তি
             localStorage.setItem(PENDING_KEY, JSON.stringify({ taskId: taskId, startTime: Date.now() }));
-            
-            // সরাসরি অ্যাডে নিয়ে যাওয়া
             window.location.href = getAdLink(taskId);
         }
 
-        // ⭐ অ্যাড থেকে ফিরে এসে চেক হবে: পুরো সময় দেখেছে কিনা
         function checkPendingAdTask() {
             const raw = localStorage.getItem(PENDING_KEY);
-            if (!raw) return; // কোনো অ্যাড চালু নেই
+            if (!raw) return;
             
             let pending = null;
             try { pending = JSON.parse(raw); } catch(e) { localStorage.removeItem(PENDING_KEY); return; }
@@ -562,30 +596,24 @@
             
             const taskId = pending.taskId;
             
-            // টাস্ক আগেই হয়ে গেথাকলে বাদ
             if ((currentUserData.dailyTasksCompleted || []).includes(taskId)) {
                 localStorage.removeItem(PENDING_KEY);
                 return;
             }
             
-            // কতক্ষণ অ্যাড দেখেছে হিসাব
             const elapsedMs = Date.now() - pending.startTime;
             const elapsedSec = Math.floor(elapsedMs / 1000);
             const totalMs = AD_DURATION * 1000;
             
-            // পেন্ডিং মুছে ফেলা — সফল হোক বা ব্যর্থ, বাটন আবার Start থাকবে
             localStorage.removeItem(PENDING_KEY);
             
             if (elapsedMs >= totalMs) {
-                // ✅ পুরো সময় দেখেছে → টাকা যোগ হবে
                 finishAdTask(taskId, elapsedSec);
             } else {
-                // ❌ আগে ফিরে এসেছে → মেসেজ দেখাবে, টাকা যোগ হবে না
                 showAdResult('fail', elapsedSec);
             }
         }
 
-        // ✅ সফল: টাস্ক সম্পূর্ণ + ব্যালেন্স যোগ
         function finishAdTask(taskId, watchedSec) {
             if (isFinishingTask) return;
             isFinishingTask = true;
@@ -601,7 +629,6 @@
             }).catch(() => { isFinishingTask = false; });
         }
 
-        // ===== রেজাল্ট মেসেজ মোডাল =====
         function showAdResult(type, watchedSec) {
             const overlay = document.getElementById('adResultOverlay');
             const icon = document.getElementById('adResultIcon');
@@ -630,15 +657,10 @@
         function closeAdResult() {
             document.getElementById('adResultOverlay').classList.remove('show');
         }
-        // ================================================================
 
         // ================================================================
         //  ⭐ ফটো সাবমিশন সিস্টেম ⭐
-        //  ফিক্স: সাবমিটের সময় আর হিস্ট্রি তৈরি হবে না।
-        //  হিস্ট্রিতে শুধু এডমিন এপ্রুভ করার পর একটাই এন্ট্রি দেখাবে।
         // ================================================================
-
-        // ছবি কমপ্রেস করার ফাংশন
         function compressImage(file, maxWidth, quality) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -656,157 +678,97 @@
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
                         canvas.toBlob((blob) => {
-                            if (blob) resolve(blob);
-                            else reject(new Error('Image compression failed'));
+                            if (blob) { resolve(blob); } else { reject(); }
                         }, 'image/jpeg', quality);
                     };
-                    img.onerror = () => reject(new Error('Image could not be read'));
+                    img.onerror = () => reject();
                     img.src = e.target.result;
                 };
-                reader.onerror = () => reject(new Error('File could not be read'));
+                reader.onerror = () => reject();
                 reader.readAsDataURL(file);
             });
         }
 
-        // ছবিকে base64 এ রূপান্তর (Firebase ব্যাকআপের জন্য)
-        function blobToBase64(blob) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = (e) => resolve(e.target.result);
-                reader.onerror = () => reject(new Error('Base64 conversion failed'));
-                reader.readAsDataURL(blob);
-            });
+        function handleWorkPhoto(input) {
+            if (input.files && input.files[0]) {
+                selectedWorkPhoto = input.files[0];
+                document.getElementById('selectedFileName').textContent = 'Selected: ' + selectedWorkPhoto.name;
+            }
         }
 
         async function submitPhotoWork() {
-            const title = document.getElementById('photoTitle').value;
-            if (!title || !selectedWorkPhoto) { showToast('Please fill all fields', 'error'); return; }
-            
-            const today = new Date().toDateString();
-            const todaySubmissions = (currentUserData.submissions || []).filter(s => new Date(s.timestamp).toDateString() === today);
-            if (todaySubmissions.length >= 2) { showToast('Daily limit reached (2 photos)', 'error'); return; }
+            const title = document.getElementById('photoTitle').value.trim();
+            if (!title) { showToast('Photo title লিখুন', 'error'); return; }
+            if (!selectedWorkPhoto) { showToast('আগে ছবি সিলেক্ট করুন', 'error'); return; }
 
-            // আপলোড চলাকালীন বাটন বন্ধ রাখা (ডাবল ক্লিক ঠেকাতে)
-            const submitBtn = document.getElementById('submitPhotoBtn');
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Processing... Please wait';
-            
-            let photoData = null;
-            let uploadMethod = '';
+            // দিনে সর্বোচ্চ ২টা ছবি
+            const today = new Date().toLocaleDateString();
+            let subs = currentUserData.submissions || [];
+            if (!Array.isArray(subs)) { subs = Object.values(subs); }
+            const todayCount = subs.filter(s => s.date === today).length;
+            if (todayCount >= 2) { showToast('আজকের ২টা ছবি আপলোড হয়ে গেছে, কাল আবার দিন', 'error'); return; }
+
+            const btn = document.getElementById('submitPhotoBtn');
+            btn.disabled = true; btn.innerText = 'Uploading...';
 
             try {
-                // ===== ধাপ ১: ছবি কমপ্রেস করা =====
-                showToast('Compressing photo...', 'success');
-                const compressed = await compressImage(selectedWorkPhoto, 1000, 0.7);
+                const compressed = await compressImage(selectedWorkPhoto, 800, 0.7);
+                const formData = new FormData();
+                formData.append('image', compressed);
+                formData.append('key', IMGBB_API_KEY);
+                const res = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData });
+                const data = await res.json();
+                if (!data.success) throw new Error();
 
-                // ===== ধাপ ২: imgbb তে আপলোডের চেষ্টা =====
-                showToast('Uploading photo...', 'success');
-                try {
-                    const formData = new FormData();
-                    formData.append('image', compressed, 'photo.jpg');
-                    formData.append('key', IMGBB_API_KEY);
-                    
-                    const res = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData });
-                    let data;
-                    try { data = await res.json(); } catch (parseErr) { throw new Error('imgbb invalid response'); }
-                    
-                    if (data && data.success && data.data && data.data.url) {
-                        photoData = data.data.url;
-                        uploadMethod = 'imgbb';
-                    } else {
-                        throw new Error('imgbb rejected');
-                    }
-                } catch (imgbbErr) {
-                    // ===== ধাপ ৩ (ব্যাকআপ): base64 হিসেবে সেভ =====
-                    console.warn('imgbb failed, using base64 backup:', imgbbErr.message);
-                    showToast('Using backup upload...', 'success');
-                    const small = await compressImage(selectedWorkPhoto, 500, 0.5);
-                    photoData = await blobToBase64(small);
-                    uploadMethod = 'base64';
-                }
+                const newSub = { title: title, photo: data.data.url, status: 'pending', date: today };
 
-                // সাবমিশন অবজেক্ট তৈরি
-                const globalSubId = database.ref('photo_submissions').push().key;
-                const submissionObj = {
-                    subId: globalSubId,
-                    title: title,
-                    photo: photoData,
-                    uploadMethod: uploadMethod,
-                    timestamp: Date.now(),
-                    date: new Date().toLocaleDateString(),
-                    status: 'pending',
-                    userId: userId
-                };
+                // Teacher review এর জন্য global নোড
+                await database.ref('photo_submissions').push({ ...newSub, userId: userId });
 
-                // ===== ধাপ ৪: আগে ইউজারের নিজের ফোল্ডারে সেভ =====
-                // ⭐ ফিক্স: এখানে আর হিস্ট্রি যোগ হবে না — হিস্ট্রি শুধু এডমিন এপ্রুভের পর আসবে
-                const newSubmissions = [ { ...submissionObj }, ...(currentUserData.submissions || []) ];
+                // ইউজারের নিজের submissions
+                await database.ref('users/' + userId + '/submissions').push(newSub);
 
-                const updates = {
-                    submissions: newSubmissions,
-                    photosSubmitted: (currentUserData.photosSubmitted || 0) + 1
-                };
-                await database.ref('users/' + userId).update(updates);
-
-                // ===== ধাপ ৫: অ্যাডমিন ড্যাশবোর্ডের জন্য গ্লোবাল photo_submissions এ সেভ =====
-                let globalOk = true;
-                try {
-                    await database.ref('photo_submissions/' + globalSubId).set(submissionObj);
-                } catch (globalErr) {
-                    globalOk = false;
-                    console.warn('Global submission save failed:', globalErr.message);
-                }
-
-                // ফর্ম রিসেট
                 document.getElementById('photoTitle').value = '';
                 document.getElementById('selectedFileName').textContent = '';
                 selectedWorkPhoto = null;
-                
-                if (globalOk) {
-                    showToast('Photo submitted! Pending admin approval.');
-                } else {
-                    showToast('Photo saved! (Admin copy failed - update Firebase Rules)', 'error');
-                }
+                btn.disabled = false; btn.innerText = 'Submit Photo';
+                showToast('ছবি জমা হয়েছে! Approval এর পর +2 TK পাবেন।');
+                loadSubmissions();
             } catch (e) {
-                // আসল এরর মেসেজ দেখানো — কেন ফেইল হলো বোঝা যাবে
-                console.error('Submit photo error:', e);
-                showToast('Upload failed: ' + e.message, 'error');
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Submit Photo';
+                btn.disabled = false; btn.innerText = 'Submit Photo';
+                showToast('Upload failed, আবার চেষ্টা করুন', 'error');
             }
-        }
-        // ================================================================
-
-        function handleWorkPhoto(input) {
-            if (!input.files || !input.files[0]) return;
-            selectedWorkPhoto = input.files[0];
-            document.getElementById('selectedFileName').textContent = selectedWorkPhoto.name;
         }
 
         function loadSubmissions() {
             const c = document.getElementById('submissionHistory');
-            const subs = currentUserData.submissions || [];
+            if (!c) return;
+            let subs = currentUserData.submissions || [];
+            if (!Array.isArray(subs)) { subs = Object.values(subs); }
             if (subs.length === 0) { c.innerHTML = '<p class="text-gray-400 text-center py-8">No submissions yet</p>'; return; }
-            c.innerHTML = subs.map(item => `
-                <div class="flex items-center gap-4 p-3 bg-gray-50 rounded-lg border border-gray-100">
-                    <img src="${item.photo}" alt="${item.title}" class="w-16 h-16 rounded-lg object-cover">
+            c.innerHTML = subs.map(s => `
+                <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                    <img src="${s.photo}" class="w-14 h-14 object-cover rounded-lg pointer-events-none">
                     <div class="flex-1">
-                        <p class="font-medium text-gray-800">${item.title}</p>
-                        <p class="text-sm text-gray-500">${item.date}</p>
+                        <p class="font-medium text-gray-800">${s.title}</p>
+                        <p class="text-xs text-gray-500">${s.date}</p>
                     </div>
-                    <span class="badge ${item.status === 'pending' ? 'badge-pending' : 'badge-approved'}">${item.status === 'pending' ? 'Pending' : 'Approved +2 TK'}</span>
-                </div>
-            `).join('');
+                    <span class="badge ${s.status === 'approved' ? 'badge-approved' : 'badge-pending'}">${s.status === 'approved' ? 'Approved' : 'Pending'}</span>
+                </div>`).join('');
         }
 
         function loadRecentActivity() {
-            const c = document.getElementById('recentActivity'); const h = currentUserData.history || [];
-            if (h.length === 0) { c.innerHTML = '<p class="text-gray-400 text-center py-4">No recent activity</p>'; return; }
-            c.innerHTML = h.slice(0, 5).map(i => `<div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100"><div><p class="font-medium text-gray-800">${i.title}</p><p class="text-sm text-gray-500">${i.date}</p></div><span class="text-emerald-600 font-semibold">${i.type.includes('withdraw') ? '-' : '+'}${i.amount} TK</span></div>`).join('');
+            const c = document.getElementById('recentActivity');
+            const h = (currentUserData.history || []).slice(0, 5);
+            if (h.length === 0) { c.innerHTML = '<p class="text-gray-400 text-center py-6">No activity yet</p>'; return; }
+            c.innerHTML = h.map(item => `
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
+                    <div><p class="font-medium text-gray-800">${item.title}</p><p class="text-sm text-gray-500">${item.date}</p></div>
+                    <span class="font-semibold ${item.type.includes('withdraw') ? 'text-red-500' : 'text-emerald-600'}">${item.type.includes('withdraw') ? '-' : '+'}${item.amount} TK</span>
+                </div>`).join('');
         }
 
-        function logout() { localStorage.removeItem('isLoggedIn'); localStorage.removeItem('userId'); window.location.href = '../login.html'; }
+        function logout() { localStorage.clear(); window.location.href = '../login.html'; }
     </script>
 </body>
 </html>
