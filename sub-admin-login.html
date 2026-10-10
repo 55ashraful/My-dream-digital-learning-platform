@@ -355,11 +355,42 @@
                                 localStorage.setItem('subadminEmail', foundUser.email);
                                 
                                 showSuccess('subadmin-success', 'Login successful! Welcome ' + accountType);
-                                
-                                // সাব-এডমিন ড্যাশবোর্ডে নিয়ে যাচ্ছে
-                                setTimeout(() => {
-                                    window.location.href = 'sub-admin/index.html';
-                                }, 1500);
+
+// ===== রোল অনুযায়ী আলাদা আলাদা ড্যাশবোর্ড ম্যাপ =====
+const rolePages = {
+    // ✅ যেগুলোর ড্যাশবোর্ড তৈরি হয়ে গেছে
+    'Counselor':              'sub-admin/counselor.html',
+    'Photo editing teacher':  'sub-admin/index.html',
+
+    // ⏳ বাকি ১৬টা — ড্যাশবোর্ড বানানোর পর আগের লাইনের মতো কমেন্ট তুলে দিন
+    // 'Senior Team Leader':   'sub-admin/senior-team-leader.html',
+    // 'Team Leader':          'sub-admin/team-leader.html',
+    // 'Trainer':              'sub-admin/trainer.html',
+    // 'Teacher':              'sub-admin/teacher.html',
+    // 'Account Manager':      'sub-admin/account-manager.html',
+    // 'Video editing teacher':'sub-admin/video-teacher.html',
+    // 'Senior counselor':     'sub-admin/senior-counselor.html',
+    // 'Helpline':             'sub-admin/helpline.html',
+    // 'Web developer':        'sub-admin/web-developer.html',
+    // 'Marketing team':       'sub-admin/marketing-team.html',
+    // 'Qualification team':   'sub-admin/qualification-team.html',
+    // 'Senior teacher':       'sub-admin/senior-teacher.html',
+    // 'Senior Manager':       'sub-admin/senior-manager.html',
+    // 'Counsellor Manager':   'sub-admin/counsellor-manager.html',
+    // 'Marketing Manager':    'sub-admin/marketing-manager.html',
+    // 'Accounte':             'sub-admin/accounte.html'
+};
+
+const targetPage = rolePages[accountType];
+
+setTimeout(() => {
+    if (targetPage) {
+        window.location.href = targetPage;   // নিজের ড্যাশবোর্ডে যাবে
+    } else {
+        showError('subadmin-error', accountType + ' এর ড্যাশবোর্ড এখনো তৈরি হয়নি!');
+        localStorage.clear();                 // কোথাও যাওয়ার নেই, তাই লগইন বাতিল
+    }
+}, 1500);
                             } else {
                                 showError('subadmin-error', 'Invalid credentials or role mismatch.');
                             }
