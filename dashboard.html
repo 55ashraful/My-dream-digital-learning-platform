@@ -105,7 +105,6 @@
             <div class="menu-item" onclick="showSection('task')"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg><span>Daily Task</span></div>
             <div class="menu-item" onclick="showSection('submit')"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><span>Submit Work</span></div>
             <div class="menu-item" onclick="window.location.href='class.html'"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg><span>Class</span></div>
-            <div class="menu-item" onclick="showSection('counselor')"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg><span>Ask Counselor</span></div>
             <div class="menu-item text-red-500" onclick="logout()"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg><span>Logout</span></div>
         </nav>
     </aside>
@@ -255,22 +254,6 @@
                 <p class="text-gray-500 mb-4 animate-fadeInUp stagger-1">Complete 10 tasks daily and earn 2 TK per task</p>
                 <div id="taskList" class="grid gap-4 animate-fadeInUp stagger-2"></div>
             </section>
-            
-            <!-- Ask Counselor Section -->
-<section id="counselorSection" class="section hidden">
-    <h2 class="text-2xl font-bold mb-6 animate-fadeInUp text-gray-800">Ask a Counselor</h2>
-    <div class="card p-5 mb-6 animate-fadeInUp stagger-1">
-        <h3 class="text-lg font-semibold mb-4 text-gray-800">আপনার প্রশ্ন করুন</h3>
-        <div class="space-y-4">
-            <textarea id="counselorQuestion" class="input-field" rows="4" placeholder="কোর্স, আর্নিং বা যেকোনো সমস্যা নিয়ে প্রশ্ন লিখুন..."></textarea>
-            <button class="btn-primary w-full" onclick="askCounselor()">প্রশ্ন পাঠান</button>
-        </div>
-    </div>
-    <div class="card p-5 animate-fadeInUp stagger-2">
-        <h3 class="text-lg font-semibold mb-4 text-gray-800">আমার প্রশ্ন ও উত্তর</h3>
-        <div id="myQueriesList" class="space-y-3"></div>
-    </div>
-</section>
 
             <!-- Submit Work Section -->
             <section id="submitSection" class="section hidden">
@@ -409,6 +392,7 @@
                 } else { logout(); } // ইউজার না থাকলে লগআউট
             });
         }
+
         function generateReferCode() { return 'MDD' + Math.random().toString(36).substring(2, 8).toUpperCase(); }
 
         function initPageUI() {
