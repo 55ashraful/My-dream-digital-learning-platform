@@ -409,47 +409,6 @@
                 } else { logout(); } // ইউজার না থাকলে লগআউট
             });
         }
-
-         // ===== Ask Counselor System =====
-function askCounselor() {
-    const q = document.getElementById('counselorQuestion').value.trim();
-    if (!q) { showToast('প্রশ্ন লিখুন', 'error'); return; }
-    const fullName = (currentUserData.firstName || '') + ' ' + (currentUserData.lastName || '');
-    database.ref('queries').push({
-        userId: userId,
-        name: fullName.trim() || 'Student',
-        question: q,
-        status: 'pending',
-        date: new Date().toLocaleDateString(),
-        timestamp: Date.now()
-    }).then(() => {
-        document.getElementById('counselorQuestion').value = '';
-        showToast('প্রশ্ন পাঠানো হয়েছে! কাউন্সেলর শীঘ্রই উত্তর দেবেন।');
-    }).catch(e => showToast('Error: ' + e.message, 'error'));
-}
-
-function loadMyQueries() {
-    database.ref('queries').orderByChild('userId').equalTo(userId).on('value', snap => {
-        const c = document.getElementById('myQueriesList');
-        c.innerHTML = '';
-        if (!snap.exists()) { c.innerHTML = '<p class="text-gray-400 text-center py-8">এখনো কোনো প্রশ্ন করেননি</p>'; return; }
-        const arr = [];
-        snap.forEach(ch => arr.push({ id: ch.key, ...ch.val() }));
-        arr.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-        arr.forEach(q => {
-            c.innerHTML += `
-            <div class="p-4 bg-gray-50 rounded-lg border border-gray-100">
-                <div class="flex justify-between items-start mb-2">
-                    <p class="font-medium text-gray-800">${q.question}</p>
-                    <span class="badge ${q.status === 'answered' ? 'badge-approved' : 'badge-pending'}">${q.status === 'answered' ? 'উত্তর পেয়েছে' : 'অপেক্ষমাণ'}</span>
-                </div>
-                <p class="text-xs text-gray-400 mb-2">${q.date || ''}</p>
-                ${q.status === 'answered' ? `<div class="bg-emerald-50 p-3 rounded-lg"><p class="text-xs text-emerald-600 font-semibold mb-1">কাউন্সেলরের উত্তর:</p><p class="text-sm text-gray-700">${q.reply}</p></div>` : ''}
-            </div>`;
-        });
-    });
-}
-
         function generateReferCode() { return 'MDD' + Math.random().toString(36).substring(2, 8).toUpperCase(); }
 
         function initPageUI() {
@@ -483,7 +442,8 @@ function loadMyQueries() {
             document.getElementById('profilePassword').value = u.password || '';
             document.getElementById('profileReferCode').value = u.myReferralCode;
             
-            loadRecentActivity(); loadHistory(); loadTasks(); loadSubmissions(); loadMyQueries();
+            loadRecentActivity(); loadHistory(); loadTasks(); loadSubmissions();
+        }
 
         function createParticles() { const c = document.getElementById('particles'); if(!c) return; c.innerHTML = ''; for (let i = 0; i < 15; i++) { const p = document.createElement('div'); p.className = 'particle'; p.style.left = Math.random() * 100 + '%'; p.style.top = Math.random() * 100 + '%'; p.style.animationDelay = Math.random() * 5 + 's'; p.style.animationDuration = (10 + Math.random() * 10) + 's'; c.appendChild(p); } }
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebarOverlay').classList.toggle('show'); }
