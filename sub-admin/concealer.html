@@ -6,15 +6,16 @@
     <title>Counselor Dashboard - My Dream Digital</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
     <style>
-        :root { --bg:#f8fafc; --bg-secondary:#ffffff; --card:#ffffff; --card-hover:#f1f5f9; --border:#e2e8f0; --accent:#6366f1; --accent-glow:rgba(99,102,241,0.15); --danger:#ef4444; --warning:#f59e0b; --success:#10b981; --text:#1e293b; --text-muted:#64748b; }
+        :root { --bg:#f8fafc; --card:#ffffff; --border:#e2e8f0; --accent:#6366f1; --accent-glow:rgba(99,102,241,0.15); --text:#1e293b; --text-muted:#64748b; }
         * { box-sizing: border-box; }
         body { font-family:'Hind Siliguri',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; -webkit-user-select:none; user-select:none; }
         .font-display { font-family:'Poppins',sans-serif; }
-        .card { background:var(--card); border:1px solid var(--border); border-radius:16px; transition:all .3s ease; box-shadow:0 1px 3px rgba(0,0,0,.04); }
+        .card { background:var(--card); border:1px solid var(--border); border-radius:16px; transition:all .3s; box-shadow:0 1px 3px rgba(0,0,0,.04); }
         .card:hover { border-color:var(--accent); box-shadow:0 4px 20px var(--accent-glow); }
         .btn-primary { background:linear-gradient(135deg,var(--accent),#4f46e5); color:#fff; font-weight:600; padding:12px 24px; border-radius:10px; border:none; cursor:pointer; transition:all .3s; }
         .btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 25px var(--accent-glow); }
@@ -22,7 +23,7 @@
         .btn-danger { background:#ef4444; color:#fff; font-weight:600; padding:8px 16px; border-radius:10px; border:none; cursor:pointer; }
         .input-field { background:#f8fafc; border:1px solid var(--border); border-radius:10px; padding:12px 16px; color:var(--text); width:100%; -webkit-user-select:text; user-select:text; }
         .input-field:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-glow); }
-        .sidebar { position:fixed; left:-320px; top:0; width:300px; height:100vh; background:var(--bg-secondary); border-right:1px solid var(--border); z-index:1000; transition:left .4s cubic-bezier(.4,0,.2,1); overflow-y:auto; }
+        .sidebar { position:fixed; left:-320px; top:0; width:300px; height:100vh; background:var(--card); border-right:1px solid var(--border); z-index:1000; transition:left .4s cubic-bezier(.4,0,.2,1); overflow-y:auto; }
         .sidebar.open { left:0; }
         .sidebar-overlay { position:fixed; inset:0; background:rgba(0,0,0,.3); backdrop-filter:blur(4px); z-index:999; opacity:0; visibility:hidden; transition:all .3s; }
         .sidebar-overlay.show { opacity:1; visibility:visible; }
@@ -36,8 +37,9 @@
         .badge-answered { background:rgba(16,185,129,.15); color:#047857; }
         .query-card { border-left:4px solid var(--accent); }
         ::-webkit-scrollbar { width:6px; } ::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:3px; }
-        @keyframes fadeInUp { from { opacity:0; transform:translateY(30px);} to { opacity:1; transform:translateY(0);} }
-        .animate-fadeInUp { animation:fadeInUp .6s ease forwards; }
+        @keyframes fadeInUp { from { opacity:0; transform:translateY(20px);} to { opacity:1; transform:translateY(0);} }
+        .animate-fadeInUp { animation:fadeInUp .5s ease forwards; }
+        .section.hidden { display:none; }
     </style>
 </head>
 <body ondragstart="return false" onselectstart="return false">
@@ -60,7 +62,7 @@
         </div>
         <nav class="py-4">
             <div class="menu-item active" onclick="showSection('home')"><i class="fas fa-home w-5 text-center"></i><span>Home</span></div>
-            <div class="menu-item" onclick="showSection('queries')"><i class="fas fa-comments w-5 text-center"></i><span>Student Queries <span id="queryBadge" class="badge badge-pending ml-1">0</span></span></div>
+            <div class="menu-item" onclick="showSection('queries')"><i class="fas fa-comments w-5 text-center"></i><span>Student Queries</span><span id="queryBadge" class="badge badge-pending ml-auto" style="display:none;">0</span></div>
             <div class="menu-item" onclick="showSection('guidance')"><i class="fas fa-bullhorn w-5 text-center"></i><span>Guidance Posts</span></div>
             <div class="menu-item" onclick="showSection('profile')"><i class="fas fa-user w-5 text-center"></i><span>My Profile</span></div>
             <div class="menu-item" onclick="showSection('balance')"><i class="fas fa-wallet w-5 text-center"></i><span>My Balance</span></div>
@@ -82,7 +84,7 @@
         <!-- Home -->
         <section id="homeSection" class="section">
             <h2 class="text-3xl font-bold mb-2 text-gray-800 animate-fadeInUp">Welcome, <span id="welcomeName"></span></h2>
-            <p class="text-gray-500 mb-8 animate-fadeInUp">Answer student questions and share guidance</p>
+            <p class="text-gray-500 mb-8 animate-fadeInUp">ছাত্রদের প্রশ্নের উত্তর দিন ও পরামর্শ শেয়ার করুন</p>
             <div class="balance-card mb-6 animate-fadeInUp">
                 <p class="text-gray-500 mb-1">Current Balance</p>
                 <h3 class="text-4xl font-bold text-gray-800 mb-4 font-display"><span id="homeBalance">0</span> TK</h3>
@@ -94,7 +96,7 @@
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <div class="card p-4 text-center"><p class="text-2xl font-bold text-yellow-600" id="statPendingQ">0</p><p class="text-sm text-gray-500">Pending Queries</p></div>
                 <div class="card p-4 text-center"><p class="text-2xl font-bold text-emerald-600" id="statAnsweredQ">0</p><p class="text-sm text-gray-500">Answered</p></div>
-                <div class="card p-4 text-center"><p class="text-2xl font-bold text-purple-600" id="statBalance">0</p><p class="text-sm text-gray-500">Balance (TK)</p></div>
+                <div class="card p-4 text-center"><p class="text-2xl font-bold text-indigo-600" id="statBalance">0</p><p class="text-sm text-gray-500">Balance (TK)</p></div>
                 <div class="card p-4 text-center"><p class="text-2xl font-bold text-blue-600" id="statWithdrawn">0</p><p class="text-sm text-gray-500">Withdrawn</p></div>
             </div>
         </section>
@@ -109,15 +111,15 @@
         <section id="guidanceSection" class="section hidden">
             <h2 class="text-2xl font-bold mb-6 text-gray-800">Guidance Posts</h2>
             <div class="card p-5 mb-6">
-                <h3 class="text-lg font-semibold mb-4 text-gray-800">New Guidance for Students</h3>
+                <h3 class="text-lg font-semibold mb-4 text-gray-800">নতুন পরামর্শ লিখুন</h3>
                 <div class="space-y-4">
-                    <input type="text" id="guideTitle" class="input-field" placeholder="Title (e.g. How to start earning)">
-                    <textarea id="guideDesc" class="input-field" rows="4" placeholder="Write your guidance here..."></textarea>
+                    <input type="text" id="guideTitle" class="input-field" placeholder="শিরোনাম (যেমন: কীভাবে শুরু করবেন)">
+                    <textarea id="guideDesc" class="input-field" rows="4" placeholder="বিস্তারিত পরামর্শ লিখুন..."></textarea>
                     <button class="btn-primary w-full" onclick="postGuidance()">Publish Guidance</button>
                 </div>
             </div>
             <div class="card p-5">
-                <h3 class="text-lg font-semibold mb-4 text-gray-800">My Published Posts</h3>
+                <h3 class="text-lg font-semibold mb-4 text-gray-800">আমার পাবলিশ করা পোস্ট</h3>
                 <div id="guidanceList" class="space-y-3"></div>
             </div>
         </section>
@@ -126,13 +128,13 @@
         <section id="profileSection" class="section hidden">
             <h2 class="text-2xl font-bold mb-6 text-gray-800">My Profile</h2>
             <div class="card p-6">
-                <div class="flex items-center gap-4 mb-4">
-                    <img id="profilePhoto" src="https://via.placeholder.com/80" alt="" class="w-20 h-20 rounded-full border-2 border-indigo-500 object-cover pointer-events-none">
-                    <label class="btn-secondary text-sm cursor-pointer">Change Photo
+                <div class="flex flex-col items-center mb-6">
+                    <img id="profilePhoto" src="https://via.placeholder.com/120" alt="" class="w-28 h-28 rounded-full border-4 border-indigo-500 object-cover pointer-events-none">
+                    <label class="btn-primary text-sm cursor-pointer mt-3">ছবি পরিবর্তন
                         <input type="file" id="photoInput" accept="image/*" class="hidden" onchange="uploadProfilePhoto(this)">
                     </label>
+                    <p id="uploadStatus" class="text-sm text-gray-500 mt-2"></p>
                 </div>
-                <p id="uploadStatus" class="text-sm text-gray-500 mb-4"></p>
                 <div class="space-y-4">
                     <div><label class="block text-sm text-gray-500 mb-1">Email</label><input type="email" id="profileEmail" class="input-field" readonly></div>
                     <div><label class="block text-sm text-gray-500 mb-1">Password</label><input type="text" id="profilePassword" class="input-field"></div>
@@ -159,7 +161,7 @@
         <!-- Withdraw -->
         <section id="withdrawSection" class="section hidden">
             <h2 class="text-2xl font-bold mb-6 text-gray-800">Withdraw</h2>
-            <div class="card p-5 mb-4 bg-yellow-50 border-yellow-200"><p class="text-sm text-yellow-700">⚠️ Minimum withdrawal: 50 TK</p></div>
+            <div class="card p-4 mb-4 bg-yellow-50 border border-yellow-200"><p class="text-sm text-yellow-700">⚠️ সর্বনিম্ন উইথড্র: ৫০ টাকা</p></div>
             <div class="card p-5">
                 <div class="space-y-4">
                     <div><label class="block text-sm text-gray-500 mb-1">Payment Method</label>
@@ -237,11 +239,11 @@
 
         // ===== Student Queries =====
         function loadQueries() {
-            database.ref('queries').orderByChild('timestamp').on('value', snap => {
+            database.ref('queries').on('value', snap => {
                 const c = document.getElementById('queryList');
                 c.innerHTML = '';
                 let pending = 0, answered = 0;
-                if (!snap.exists()) { c.innerHTML = '<p class="text-gray-400 text-center py-8">কোনো প্রশ্ন নেই</p>'; }
+                if (!snap.exists()) { c.innerHTML = '<p class="text-gray-400 text-center py-8">এখনো কোনো প্রশ্ন নেই</p>'; }
                 snap.forEach(child => {
                     const q = child.val(), id = child.key;
                     if (q.status === 'answered') answered++; else pending++;
@@ -254,12 +256,12 @@
                             </div>
                             <span class="badge ${q.status === 'answered' ? 'badge-answered' : 'badge-pending'}">${q.status === 'answered' ? 'Answered' : 'Pending'}</span>
                         </div>
-                        <p class="text-gray-700 mb-3">${q.question}</p>
-                        ${q.status === 'answered' 
+                        <p class="text-gray-700 mb-3">${q.question || ''}</p>
+                        ${q.status === 'answered'
                             ? `<div class="bg-indigo-50 p-3 rounded-lg"><p class="text-xs text-indigo-500 font-semibold mb-1">আপনার উত্তর:</p><p class="text-sm text-gray-700">${q.reply}</p></div>`
                             : `<div class="space-y-2">
                                 <textarea id="reply-${id}" class="input-field" rows="2" placeholder="উত্তর লিখুন..."></textarea>
-                                <button class="btn-primary text-sm" onclick="sendReply('${id}')">Send Reply</button>
+                                <button class="btn-primary text-sm" onclick="sendReply('${id}')">Send Reply (+1 TK)</button>
                                </div>`}
                     </div>`;
                 });
@@ -277,7 +279,6 @@
                 reply: reply, status: 'answered', repliedBy: userId,
                 replyDate: new Date().toLocaleDateString()
             }).then(() => {
-                // প্রতিটা উত্তরে কাউন্সেলর ১ TK পাবেন
                 const h = [...(currentUserData.history || [])];
                 h.unshift({ title: 'Query Answered Reward', type: 'query', amount: 1, date: new Date().toLocaleDateString() });
                 database.ref('subadmins/' + userId).update({ balance: (currentUserData.balance||0) + 1, history: h });
@@ -292,7 +293,7 @@
             if (!title || !desc) { showToast('সব ঘর পূরণ করুন', 'error'); return; }
             database.ref('counselor_notices').push({
                 counselorId: userId, counselorName: currentUserData.email.split('@')[0],
-                title, desc, date: new Date().toLocaleDateString(), timestamp: Date.now()
+                title: title, desc: desc, date: new Date().toLocaleDateString(), timestamp: Date.now()
             }).then(() => {
                 document.getElementById('guideTitle').value = '';
                 document.getElementById('guideDesc').value = '';
@@ -322,7 +323,7 @@
             if (confirm('মুছে ফেলবেন?')) database.ref('counselor_notices/' + id).remove().then(() => showToast('Deleted!'));
         }
 
-        // ===== Profile / Photo / Withdraw / History =====
+        // ===== Profile / Withdraw / History =====
         function uploadProfilePhoto(input) {
             if (!input.files || !input.files[0]) return;
             document.getElementById('uploadStatus').textContent = 'Uploading...';
@@ -331,10 +332,10 @@
                 .then(r => r.json()).then(d => {
                     if (d.success) {
                         database.ref('subadmins/' + userId + '/photo').set(d.data.url);
-                        document.getElementById('uploadStatus').textContent = 'Done!';
+                        document.getElementById('uploadStatus').textContent = 'সফল!';
                         showToast('ছবি আপডেট হয়েছে!');
                     } else throw new Error();
-                }).catch(() => { document.getElementById('uploadStatus').textContent = 'Failed.'; showToast('Upload failed', 'error'); });
+                }).catch(() => { document.getElementById('uploadStatus').textContent = 'ব্যর্থ।'; showToast('Upload failed', 'error'); });
         }
 
         function saveProfile() {
@@ -350,7 +351,7 @@
             if (amount < 50) { showToast('সর্বনিম্ন ৫০ টাকা', 'error'); return; }
             if ((currentUserData.balance||0) < amount) { showToast('পর্যাপ্ত ব্যালেন্স নেই', 'error'); return; }
             const h = [...(currentUserData.history || [])];
-            h.unshift({ title: 'Withdraw via ' + method, type: 'withdraw_pending', amount, date: new Date().toLocaleDateString() });
+            h.unshift({ title: 'Withdraw via ' + method, type: 'withdraw_pending', amount: amount, date: new Date().toLocaleDateString() });
             database.ref('subadmins/' + userId).update({
                 balance: currentUserData.balance - amount,
                 totalWithdrawn: (currentUserData.totalWithdrawn||0) + amount,
