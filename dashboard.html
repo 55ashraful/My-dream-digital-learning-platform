@@ -105,6 +105,7 @@
             <div class="menu-item" onclick="showSection('task')"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg><span>Daily Task</span></div>
             <div class="menu-item" onclick="showSection('submit')"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><span>Submit Work</span></div>
             <div class="menu-item" onclick="window.location.href='class.html'"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg><span>Class</span></div>
+            <div class="menu-item" onclick="showSection('counselor')"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg><span>Ask Counselor</span></div>
             <div class="menu-item text-red-500" onclick="logout()"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg><span>Logout</span></div>
         </nav>
     </aside>
@@ -254,6 +255,22 @@
                 <p class="text-gray-500 mb-4 animate-fadeInUp stagger-1">Complete 10 tasks daily and earn 2 TK per task</p>
                 <div id="taskList" class="grid gap-4 animate-fadeInUp stagger-2"></div>
             </section>
+            
+            <!-- Ask Counselor Section -->
+<section id="counselorSection" class="section hidden">
+    <h2 class="text-2xl font-bold mb-6 animate-fadeInUp text-gray-800">Ask a Counselor</h2>
+    <div class="card p-5 mb-6 animate-fadeInUp stagger-1">
+        <h3 class="text-lg font-semibold mb-4 text-gray-800">আপনার প্রশ্ন করুন</h3>
+        <div class="space-y-4">
+            <textarea id="counselorQuestion" class="input-field" rows="4" placeholder="কোর্স, আর্নিং বা যেকোনো সমস্যা নিয়ে প্রশ্ন লিখুন..."></textarea>
+            <button class="btn-primary w-full" onclick="askCounselor()">প্রশ্ন পাঠান</button>
+        </div>
+    </div>
+    <div class="card p-5 animate-fadeInUp stagger-2">
+        <h3 class="text-lg font-semibold mb-4 text-gray-800">আমার প্রশ্ন ও উত্তর</h3>
+        <div id="myQueriesList" class="space-y-3"></div>
+    </div>
+</section>
 
             <!-- Submit Work Section -->
             <section id="submitSection" class="section hidden">
@@ -393,6 +410,46 @@
             });
         }
 
+         // ===== Ask Counselor System =====
+function askCounselor() {
+    const q = document.getElementById('counselorQuestion').value.trim();
+    if (!q) { showToast('প্রশ্ন লিখুন', 'error'); return; }
+    const fullName = (currentUserData.firstName || '') + ' ' + (currentUserData.lastName || '');
+    database.ref('queries').push({
+        userId: userId,
+        name: fullName.trim() || 'Student',
+        question: q,
+        status: 'pending',
+        date: new Date().toLocaleDateString(),
+        timestamp: Date.now()
+    }).then(() => {
+        document.getElementById('counselorQuestion').value = '';
+        showToast('প্রশ্ন পাঠানো হয়েছে! কাউন্সেলর শীঘ্রই উত্তর দেবেন।');
+    }).catch(e => showToast('Error: ' + e.message, 'error'));
+}
+
+function loadMyQueries() {
+    database.ref('queries').orderByChild('userId').equalTo(userId).on('value', snap => {
+        const c = document.getElementById('myQueriesList');
+        c.innerHTML = '';
+        if (!snap.exists()) { c.innerHTML = '<p class="text-gray-400 text-center py-8">এখনো কোনো প্রশ্ন করেননি</p>'; return; }
+        const arr = [];
+        snap.forEach(ch => arr.push({ id: ch.key, ...ch.val() }));
+        arr.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+        arr.forEach(q => {
+            c.innerHTML += `
+            <div class="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                <div class="flex justify-between items-start mb-2">
+                    <p class="font-medium text-gray-800">${q.question}</p>
+                    <span class="badge ${q.status === 'answered' ? 'badge-approved' : 'badge-pending'}">${q.status === 'answered' ? 'উত্তর পেয়েছে' : 'অপেক্ষমাণ'}</span>
+                </div>
+                <p class="text-xs text-gray-400 mb-2">${q.date || ''}</p>
+                ${q.status === 'answered' ? `<div class="bg-emerald-50 p-3 rounded-lg"><p class="text-xs text-emerald-600 font-semibold mb-1">কাউন্সেলরের উত্তর:</p><p class="text-sm text-gray-700">${q.reply}</p></div>` : ''}
+            </div>`;
+        });
+    });
+}
+
         function generateReferCode() { return 'MDD' + Math.random().toString(36).substring(2, 8).toUpperCase(); }
 
         function initPageUI() {
@@ -426,8 +483,7 @@
             document.getElementById('profilePassword').value = u.password || '';
             document.getElementById('profileReferCode').value = u.myReferralCode;
             
-            loadRecentActivity(); loadHistory(); loadTasks(); loadSubmissions();
-        }
+            loadRecentActivity(); loadHistory(); loadTasks(); loadSubmissions(); loadMyQueries();
 
         function createParticles() { const c = document.getElementById('particles'); if(!c) return; c.innerHTML = ''; for (let i = 0; i < 15; i++) { const p = document.createElement('div'); p.className = 'particle'; p.style.left = Math.random() * 100 + '%'; p.style.top = Math.random() * 100 + '%'; p.style.animationDelay = Math.random() * 5 + 's'; p.style.animationDuration = (10 + Math.random() * 10) + 's'; c.appendChild(p); } }
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebarOverlay').classList.toggle('show'); }
