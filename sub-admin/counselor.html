@@ -36,6 +36,7 @@
         .badge-pending { background:rgba(245,158,11,.15); color:#b45309; }
         .badge-answered { background:rgba(16,185,129,.15); color:#047857; }
         .query-card { border-left:4px solid var(--accent); }
+        .wa-btn { background:#25D366; color:#fff; font-weight:600; padding:8px 14px; border-radius:10px; border:none; cursor:pointer; display:inline-flex; align-items:center; gap:6px; font-size:0.8rem; text-decoration:none; }
         ::-webkit-scrollbar { width:6px; } ::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:3px; }
         @keyframes fadeInUp { from { opacity:0; transform:translateY(20px);} to { opacity:1; transform:translateY(0);} }
         .animate-fadeInUp { animation:fadeInUp .5s ease forwards; }
@@ -63,7 +64,9 @@
         <nav class="py-4">
             <div class="menu-item active" onclick="showSection('home')"><i class="fas fa-home w-5 text-center"></i><span>Home</span></div>
             <div class="menu-item" onclick="showSection('queries')"><i class="fas fa-comments w-5 text-center"></i><span>Student Queries</span><span id="queryBadge" class="badge badge-pending ml-auto" style="display:none;">0</span></div>
+            <div class="menu-item" onclick="showSection('students')"><i class="fas fa-users w-5 text-center"></i><span>Students</span></div>
             <div class="menu-item" onclick="showSection('guidance')"><i class="fas fa-bullhorn w-5 text-center"></i><span>Guidance Posts</span></div>
+            <div class="menu-item" onclick="showSection('duties')"><i class="fas fa-clipboard-list w-5 text-center"></i><span>My Duties</span></div>
             <div class="menu-item" onclick="showSection('profile')"><i class="fas fa-user w-5 text-center"></i><span>My Profile</span></div>
             <div class="menu-item" onclick="showSection('balance')"><i class="fas fa-wallet w-5 text-center"></i><span>My Balance</span></div>
             <div class="menu-item" onclick="showSection('history')"><i class="fas fa-clock w-5 text-center"></i><span>History</span></div>
@@ -90,7 +93,7 @@
                 <h3 class="text-4xl font-bold text-gray-800 mb-4 font-display"><span id="homeBalance">0</span> TK</h3>
                 <div class="flex gap-3 flex-wrap">
                     <button class="btn-primary text-sm" onclick="showSection('queries')">Answer Queries</button>
-                    <button class="btn-secondary text-sm" onclick="showSection('guidance')">Post Guidance</button>
+                    <button class="btn-secondary text-sm" onclick="showSection('students')">View Students</button>
                 </div>
             </div>
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -107,6 +110,15 @@
             <div id="queryList" class="space-y-4"></div>
         </section>
 
+        <!-- 🆕 Students -->
+        <section id="studentsSection" class="section hidden">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800">All Students</h2>
+            <div class="card p-5 mb-4">
+                <input type="text" id="studentSearch" class="input-field" placeholder="নাম বা ইমেইল দিয়ে খুঁজুন..." onkeyup="searchStudents()">
+            </div>
+            <div id="studentList" class="space-y-3"></div>
+        </section>
+
         <!-- Guidance Posts -->
         <section id="guidanceSection" class="section hidden">
             <h2 class="text-2xl font-bold mb-6 text-gray-800">Guidance Posts</h2>
@@ -121,6 +133,18 @@
             <div class="card p-5">
                 <h3 class="text-lg font-semibold mb-4 text-gray-800">আমার পাবলিশ করা পোস্ট</h3>
                 <div id="guidanceList" class="space-y-3"></div>
+            </div>
+        </section>
+
+        <!-- 🆕 My Duties -->
+        <section id="dutiesSection" class="section hidden">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800">কাউন্সেলরের কাজের নিয়ম</h2>
+            <div class="card p-5 space-y-4 text-gray-700">
+                <div class="flex items-start gap-3 p-3 bg-indigo-50 rounded-lg"><span>📩</span><p>ছাত্রের প্রশ্নের উত্তর <strong>২৪ ঘণ্টার মধ্যে</strong> দিতে হবে — প্রতি উত্তরে <strong class="text-emerald-600">+1 TK</strong> আর্ন</p></div>
+                <div class="flex items-start gap-3 p-3 bg-gray-50 rounded-lg"><span>📞</span><p>নতুন ছাত্রকে WhatsApp-এ স্বাগতম জানাতে হবে (Students সেকশন থেকে)</p></div>
+                <div class="flex items-start gap-3 p-3 bg-gray-50 rounded-lg"><span>📢</span><p>সপ্তাহে অন্তত <strong>১টি পরামর্শ পোস্ট</strong> করতে হবে</p></div>
+                <div class="flex items-start gap-3 p-3 bg-gray-50 rounded-lg"><span>🤝</span><p>ছাত্রের কোর্স ও আর্নিং সমস্যায় গাইড করতে হবে</p></div>
+                <div class="flex items-start gap-3 p-3 bg-gray-50 rounded-lg"><span>⚠️</span><p>বড় সমস্যা হলে সরাসরি অ্যাডমিনকে জানাতে হবে</p></div>
             </div>
         </section>
 
@@ -193,7 +217,7 @@
         const database = firebase.database();
         const IMGBB_API_KEY = '07bb6a485d95048a7add76d3207d44be';
 
-        let currentUserData = {}, userId = null;
+        let currentUserData = {}, userId = null, allStudents = [];
 
         document.addEventListener('DOMContentLoaded', () => {
             // 🔐 শুধুমাত্র Counselor ঢুকতে পারবে
@@ -204,6 +228,7 @@
             loadCounselorData();
             loadQueries();
             loadGuidance();
+            loadStudents();
         });
 
         function loadCounselorData() {
@@ -244,8 +269,14 @@
                 c.innerHTML = '';
                 let pending = 0, answered = 0;
                 if (!snap.exists()) { c.innerHTML = '<p class="text-gray-400 text-center py-8">এখনো কোনো প্রশ্ন নেই</p>'; }
-                snap.forEach(child => {
-                    const q = child.val(), id = child.key;
+                const arr = [];
+                snap.forEach(ch => arr.push({ id: ch.key, ...ch.val() }));
+                arr.sort((a,b) => {
+                    if ((a.status==='pending') !== (b.status==='pending')) return a.status==='pending' ? -1 : 1;
+                    return (b.timestamp||0) - (a.timestamp||0);
+                });
+                arr.forEach(q => {
+                    const id = q.id;
                     if (q.status === 'answered') answered++; else pending++;
                     c.innerHTML += `
                     <div class="card query-card p-4 animate-fadeInUp">
@@ -284,6 +315,39 @@
                 database.ref('subadmins/' + userId).update({ balance: (currentUserData.balance||0) + 1, history: h });
                 showToast('উত্তর পাঠানো হয়েছে! (+1 TK)');
             });
+        }
+
+        // ===== 🆕 Students =====
+        function loadStudents() {
+            database.ref('users').on('value', snap => {
+                allStudents = [];
+                snap.forEach(c => { const u = c.val(); u.uid = c.key; allStudents.push(u); });
+                renderStudents(allStudents);
+            });
+        }
+
+        function renderStudents(list) {
+            const c = document.getElementById('studentList');
+            if (!list.length) { c.innerHTML = '<p class="text-gray-400 text-center py-8">কোনো ছাত্র নেই</p>'; return; }
+            c.innerHTML = '';
+            list.forEach(u => {
+                const name = ((u.firstName||'') + ' ' + (u.lastName||'')).trim() || 'Student';
+                const phone = String(u.whatsapp || u.phone || '').replace(/[^0-9]/g,'');
+                c.innerHTML += `
+                <div class="flex justify-between items-center p-4 bg-white rounded-lg border">
+                    <div>
+                        <p class="font-semibold text-gray-800">${name}</p>
+                        <p class="text-xs text-gray-500">${u.email || u.whatsapp || ''}</p>
+                        <p class="text-xs text-gray-400">Balance: ${u.balance||0} TK | ${u.status==='blocked'?'⛔ Blocked':'✅ Active'}</p>
+                    </div>
+                    ${phone ? `<a href="https://wa.me/${phone}" target="_blank" class="wa-btn"><i class="fab fa-whatsapp"></i> WhatsApp</a>` : ''}
+                </div>`;
+            });
+        }
+
+        function searchStudents() {
+            const q = document.getElementById('studentSearch').value.toLowerCase();
+            renderStudents(allStudents.filter(u => (((u.firstName||'')+' '+(u.lastName||'')+' '+(u.email||'')).toLowerCase().includes(q))));
         }
 
         // ===== Guidance Posts =====
