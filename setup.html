@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>Setup IDs</title></head>
+<body style="font-family:sans-serif;text-align:center;padding:30px;">
+<h3>Admin & Sub Admin ID Creator</h3>
+<button onclick="createIDs()" style="padding:15px 30px;font-size:16px;background:#4A00E0;color:#fff;border:none;border-radius:8px;">
+  Create All IDs
+</button>
+<p id="status"></p>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyB8aEO4CyIP6l4kspuo_sJUMTwUzp0NvzU",
+  authDomain: "my-income-d85b2.firebaseapp.com",
+  databaseURL: "https://my-income-d85b2-default-rtdb.firebaseio.com",
+  projectId: "my-income-d85b2",
+  storageBucket: "my-income-d85b2.firebasestorage.app",
+  messagingSenderId: "731557596083",
+  appId: "1:731557596083:web:0f2c25edd8c87dfcd359c6"
+};
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+
+const categories = ["Counselor","Senior Team Leader","Team Leader","Trainer",
+"Teacher","Account Manager","Photo editing teacher","Video editing teacher",
+"Senior counselor","Helpline","Web developer","Marketing team",
+"Qualification team","Senior teacher","Senior Manager","Counsellor Manager",
+"Marketing Manager","Accountant"];
+
+function createIDs(){
+  // ১টা মূল অ্যাডমিন
+  database.ref('admins/admin1').set({
+    email: "mydreamd2424@gmail.com",
+    password: "Admin@123"
+  });
+  // ১৮টা সাব-অ্যাডমিন (প্রতি ক্যাটাগরিতে ১টা)
+  categories.forEach((cat, i) => {
+    database.ref('subadmins/sub' + (i+1)).set({
+      email: cat.toLowerCase().replace(/ /g,'.') + "@mydream.com",
+      password: "Sub@123",
+      category: cat
+    });
+  });
+  document.getElementById('status').innerText =
+    "✅ ১টা অ্যাডমিন + ১৮টা সাব-অ্যাডমিন তৈরি হয়ে গেছে!";
+}
+</script>
+</body>
+</html>
