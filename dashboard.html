@@ -42,7 +42,7 @@
         .sidebar.open { left: 0; }
         .sidebar-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(4px); z-index: 999; opacity: 0; visibility: hidden; transition: all 0.3s ease; }
         .sidebar-overlay.show { opacity: 1; visibility: visible; }
-        .menu-item { display: flex; align-items: center; gap: 12px; padding: 14px 20px; color: var(--text-muted); transition: all 0.3s ease; cursor: pointer; border-left: 3px solid transparent; }
+        .menu-item { display: flex; align-items: center; gap: 12px; padding: 8px 20px; color: var(--text-muted); transition: all 0.3s ease; cursor: pointer; border-left: 3px solid transparent; }
         .menu-item:hover, .menu-item.active { background: rgba(0, 184, 148, 0.08); color: var(--accent); border-left-color: var(--accent); }
         .three-dot { display: flex; flex-direction: column; gap: 4px; cursor: pointer; padding: 10px; }
         .three-dot span { width: 5px; height: 5px; background: var(--accent); border-radius: 50%; transition: all 0.3s ease; }
@@ -84,7 +84,7 @@
 
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
-        <div class="p-5 border-b border-gray-200">
+        <div class="p-2 border-b border-gray-200">
             <div class="flex items-center gap-3">
                 <div class="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center overflow-hidden">
                     <img id="sidebarPhoto" src="" alt="Profile" class="w-full h-full object-cover hidden">
@@ -96,7 +96,7 @@
                 </div>
             </div>
         </div>
-        <nav class="py-4">
+        <nav class="py-2">
             <div class="menu-item active" onclick="showSection('home')"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg><span>Home</span></div>
             <div class="menu-item" onclick="showSection('profile')"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg><span>My Profile</span></div>
             <div class="menu-item" onclick="showSection('balance')"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span>My Balance</span></div>
@@ -146,7 +146,7 @@
                     <div class="card p-4 text-center"><p class="text-2xl font-bold text-purple-600" id="statPhotos">0</p><p class="text-sm text-gray-500">Photos Submitted</p></div>
                     <div class="card p-4 text-center"><p class="text-2xl font-bold text-yellow-600" id="statWithdraw">0</p><p class="text-sm text-gray-500">Withdrawals</p></div>
                 </div>
-                <div class="card p-5 animate-fadeInUp stagger-4">
+                <div class="card p-4 animate-fadeInUp stagger-4">
                     <h3 class="text-lg font-semibold mb-4 text-gray-800">Recent Activity</h3>
                     <div id="recentActivity" class="space-y-3"></div>
                 </div>
@@ -185,7 +185,7 @@
                         <h3 class="text-5xl font-bold text-gray-800 mb-2 font-display"><span id="balanceAmount">0</span> TK</h3>
                     </div>
                 </div>
-                <div class="card p-5 mb-6 animate-fadeInUp stagger-2">
+                <div class="card p-4 mb-6 animate-fadeInUp stagger-2">
                     <h3 class="text-lg font-semibold mb-4 text-gray-800">Refer & Earn (100 TK per refer)</h3>
                     <div class="bg-gray-50 rounded-lg p-4 mb-4 border border-gray-100">
                         <p class="text-sm text-gray-500 mb-1">Your Refer Code</p>
@@ -214,7 +214,7 @@
             <!-- History Section -->
             <section id="historySection" class="section hidden">
                 <h2 class="text-2xl font-bold mb-6 animate-fadeInUp text-gray-800">History</h2>
-                <div class="card p-5 animate-fadeInUp stagger-1">
+                <div class="card p-4 animate-fadeInUp stagger-1">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-lg font-semibold text-gray-800">Earnings & Transactions</h3>
                         <select id="historyFilter" class="input-field w-auto text-sm" onchange="filterHistory()">
@@ -239,7 +239,7 @@
                     <p class="text-sm text-gray-600 mt-1">Minimum withdrawal amount: 50 TK.</p>
                     <p class="text-sm text-gray-600 mt-1">You must keep at least 10 TK in your balance after withdrawal.</p>
                 </div>
-                <div class="card p-5 mb-6 animate-fadeInUp stagger-2">
+                <div class="card p-4 mb-6 animate-fadeInUp stagger-2">
                     <h3 class="text-lg font-semibold mb-4 text-gray-800">Request Withdrawal</h3>
                     <div class="space-y-4">
                         <div><label class="block text-sm text-gray-500 mb-1">Payment Method</label><select id="withdrawMethod" class="input-field"><option value="bkash">bKash</option><option value="nagad">Nagad</option><option value="rocket">Rocket</option></select></div>
@@ -260,14 +260,14 @@
             <!-- 🆕 Ask Counselor Section -->
             <section id="counselorSection" class="section hidden">
                 <h2 class="text-2xl font-bold mb-6 animate-fadeInUp text-gray-800">Ask a Counselor</h2>
-                <div class="card p-5 mb-6 animate-fadeInUp stagger-1">
+                <div class="card p-4 mb-6 animate-fadeInUp stagger-1">
                     <h3 class="text-lg font-semibold mb-4 text-gray-800">আপনার প্রশ্ন করুন</h3>
                     <div class="space-y-4">
                         <textarea id="counselorQuestion" class="input-field" rows="4" placeholder="কোর্স, আর্নিং বা যেকোনো সমস্যা নিয়ে প্রশ্ন লিখুন..."></textarea>
                         <button class="btn-primary w-full" onclick="askCounselor()">প্রশ্ন পাঠান</button>
                     </div>
                 </div>
-                <div class="card p-5 animate-fadeInUp stagger-2">
+                <div class="card p-4 animate-fadeInUp stagger-2">
                     <h3 class="text-lg font-semibold mb-4 text-gray-800">আমার প্রশ্ন ও উত্তর</h3>
                     <div id="myQueriesList" class="space-y-3"></div>
                 </div>
@@ -280,7 +280,7 @@
                     <p class="font-semibold text-emerald-600">Submission Guidelines</p>
                     <p class="text-sm text-gray-600 mt-1">You can submit minimum 50 photos (no maximum limit). Maximum 2 photos per day. You will earn 2 TK per photo <strong>after admin approval</strong>.</p>
                 </div>
-                <div class="card p-5 mb-6 animate-fadeInUp stagger-2">
+                <div class="card p-4 mb-6 animate-fadeInUp stagger-2">
                     <h3 class="text-lg font-semibold mb-4 text-gray-800">Submit Photo</h3>
                     <div class="space-y-4">
                         <div><label class="block text-sm text-gray-500 mb-1">Photo Title</label><input type="text" id="photoTitle" class="input-field" placeholder="Enter photo title"></div>
@@ -296,7 +296,7 @@
                         <button class="btn-primary w-full" id="submitPhotoBtn" onclick="submitPhotoWork()">Submit Photo</button>
                     </div>
                 </div>
-                <div class="card p-5 animate-fadeInUp stagger-3">
+                <div class="card p-4 animate-fadeInUp stagger-3">
                     <h3 class="text-lg font-semibold mb-4 text-gray-800">Submission History</h3>
                     <div id="submissionHistory" class="space-y-3"></div>
                 </div>
